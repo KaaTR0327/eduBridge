@@ -56,7 +56,7 @@ export function InstructorPanel({ dashboard, categories, forms, setForms, onCrea
           <input value={forms.courseShortDescription} onChange={(event) => setForms((prev) => ({ ...prev, courseShortDescription: event.target.value }))} placeholder="Short description" />
           <input value={forms.coursePrice} onChange={(event) => setForms((prev) => ({ ...prev, coursePrice: event.target.value }))} placeholder="Price" />
           <input value={forms.courseThumbnailUrl} onChange={(event) => setForms((prev) => ({ ...prev, courseThumbnailUrl: event.target.value }))} placeholder="Thumbnail URL" />
-          <select value={forms.courseCategoryId} onChange={(event) => setForms((prev) => ({ ...prev, courseCategoryId: event.target.value }))}>
+          <select className="select-base" value={forms.courseCategoryId} onChange={(event) => setForms((prev) => ({ ...prev, courseCategoryId: event.target.value }))}>
             <option value="">Select category</option>
             {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
           </select>
@@ -69,7 +69,7 @@ export function InstructorPanel({ dashboard, categories, forms, setForms, onCrea
       <article className="panel-card form-card">
         <p className="eyebrow">Manage Course</p>
         <div className="form-grid">
-          <select value={selectedCourse?.id || ''} onChange={(event) => setForms((prev) => ({ ...prev, selectedCourseId: event.target.value, selectedSectionId: '' }))}>
+          <select className="select-base" value={selectedCourse?.id || ''} onChange={(event) => setForms((prev) => ({ ...prev, selectedCourseId: event.target.value, selectedSectionId: '' }))}>
             <option value="">Select course</option>
             {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
           </select>
@@ -90,7 +90,7 @@ export function InstructorPanel({ dashboard, categories, forms, setForms, onCrea
       <article className="panel-card wide-card">
         <p className="eyebrow">Add Lesson</p>
         <div className="form-grid lesson-form-grid">
-          <select value={selectedSection?.id || ''} onChange={(event) => setForms((prev) => ({ ...prev, selectedSectionId: event.target.value }))}>
+          <select className="select-base" value={selectedSection?.id || ''} onChange={(event) => setForms((prev) => ({ ...prev, selectedSectionId: event.target.value }))}>
             <option value="">Select section</option>
             {selectedCourse?.sections?.map((section) => <option key={section.id} value={section.id}>{section.title}</option>)}
           </select>

@@ -38,7 +38,7 @@ export function AuthView({ form, setForm, onLogin, onRegister, busy, message, on
           <input value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} placeholder="Full name" />
           <input value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} placeholder="Email" />
           <input type="password" value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} placeholder="Password" />
-          <select value={form.role} onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}>
+          <select className="select-base" value={form.role} onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}>
             <option value="STUDENT">Student</option>
             <option value="INSTRUCTOR">Instructor</option>
           </select>

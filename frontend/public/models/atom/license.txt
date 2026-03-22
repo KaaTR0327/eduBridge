@@ -1,0 +1,11 @@
+Model Information:
+* title:	108-03-15-3D ATOM ARRAY
+* source:	https://sketchfab.com/3d-models/108-03-15-3d-atom-array-b8de3aef814c423eb53b06b8fe41e0c5
+* author:	yu187311 (https://sketchfab.com/yu187311)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "108-03-15-3D ATOM ARRAY" (https://sketchfab.com/3d-models/108-03-15-3d-atom-array-b8de3aef814c423eb53b06b8fe41e0c5) by yu187311 (https://sketchfab.com/yu187311) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

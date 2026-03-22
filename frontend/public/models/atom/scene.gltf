@@ -1,0 +1,308 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 21374,
+      "max": [
+        120.66056060791016,
+        116.05506896972656,
+        96.06179809570313
+      ],
+      "min": [
+        -94.6030502319336,
+        -125.27234649658203,
+        -99.04653930664063
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 256488,
+      "componentType": 5126,
+      "count": 21374,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 21374,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 64800,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 530,
+      "max": [
+        18.66666603088379
+      ],
+      "min": [
+        0.0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 530,
+      "max": [
+        0.6537136435508728,
+        0.21852873265743256,
+        0.4066277742385864,
+        1.0
+      ],
+      "min": [
+        -0.05814418941736221,
+        -0.5863878130912781,
+        -0.7758103609085083,
+        0.6309661269187927
+      ],
+      "type": "VEC4"
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 6,
+            "path": "rotation"
+          }
+        }
+      ],
+      "name": "CINEMA_4D_Main",
+      "samplers": [
+        {
+          "input": 4,
+          "interpolation": "LINEAR",
+          "output": 5
+        }
+      ]
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "yu187311 (https://sketchfab.com/yu187311)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/108-03-15-3d-atom-array-b8de3aef814c423eb53b06b8fe41e0c5",
+      "title": "108-03-15-3D ATOM ARRAY"
+    },
+    "generator": "Sketchfab-12.68.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 259200,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 170992,
+      "byteOffset": 259200,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 512976,
+      "byteOffset": 430192,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2120,
+      "byteOffset": 943168,
+      "name": "floatBufferViews"
+    },
+    {
+      "buffer": 0,
+      "byteLength": 8480,
+      "byteOffset": 945288,
+      "byteStride": 16,
+      "name": "floatBufferViews"
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 953768,
+      "uri": "scene.bin"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.766561419,
+          0.0070300454,
+          0.0070300454,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9524317154
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Sphere_Mat_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "eff10d573ade4e4abc57c9f20ad88abb.fbx"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "Object_2"
+    },
+    {
+      "children": [
+        4,
+        6
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        5
+      ],
+      "name": "CINEMA_4D_Editor",
+      "rotation": [
+        -0.15606123208999634,
+        0.9106032252311707,
+        -0.06464267522096634,
+        0.3771842122077942
+      ],
+      "translation": [
+        373.95440673828125,
+        185.61508178710938,
+        268.3193359375
+      ]
+    },
+    {
+      "name": "Object_5"
+    },
+    {
+      "children": [
+        7
+      ],
+      "name": "Atom_Array",
+      "rotation": [
+        0.0,
+        0.21852873265743256,
+        0.0,
+        0.9758304953575134
+      ]
+    },
+    {
+      "children": [
+        8
+      ],
+      "name": "Sphere"
+    },
+    {
+      "mesh": 0,
+      "name": "Sphere_Mat_0"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}
