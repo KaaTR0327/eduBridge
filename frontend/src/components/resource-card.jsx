@@ -1,11 +1,10 @@
 import { ArrowUpRight, Download, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCreatorById, getLocalizedField, getTypeLabel } from '../data/marketplace';
+import { getLocalizedField, getTypeLabel } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function ResourceCard({ resource }) {
   const { locale } = useLanguage();
-  const creator = getCreatorById(resource.creatorId);
   const freeLabel = locale === 'mn' ? 'Үнэгүй' : 'Free';
   const viewLabel = locale === 'mn' ? 'Дэлгэрэнгүй' : 'View resource';
 
@@ -16,6 +15,7 @@ export function ResourceCard({ resource }) {
           <img
             src={resource.cover}
             alt={getLocalizedField(resource, 'title', locale)}
+            loading="lazy"
             className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
           />
         </div>
@@ -29,7 +29,7 @@ export function ResourceCard({ resource }) {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold tracking-tight text-white transition group-hover:text-[#f9b17a]">
+            <h3 className="text-xl font-semibold tracking-tight text-white transition group-hover:text-[#f9b17a]">
               {getLocalizedField(resource, 'title', locale)}
             </h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -47,18 +47,18 @@ export function ResourceCard({ resource }) {
 
           <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4 text-sm text-slate-300">
             <div>
-              <p className="font-medium text-white">{creator?.name}</p>
+              <p className="font-medium text-white">{resource.creator?.name || 'EduBridge Creator'}</p>
               <p>{resource.fileType}</p>
             </div>
 
             <div className="space-y-1 text-right">
               <div className="flex items-center justify-end gap-1">
                 <Star className="h-4 w-4 fill-[#f9b17a] text-[#f9b17a]" />
-                <span className="tabular-nums">{resource.rating}</span>
+                <span className="tabular-nums">{resource.rating || 0}</span>
               </div>
               <div className="flex items-center justify-end gap-1">
                 <Download className="h-4 w-4" />
-                <span className="tabular-nums">{resource.downloads.toLocaleString()}</span>
+                <span className="tabular-nums">{(resource.downloads || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>

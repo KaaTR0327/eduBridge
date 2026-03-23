@@ -1,0 +1,17 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="14" fill="#0F1326"/>
+  <path d="M12 41L28 46L32 54L18 49L12 41Z" fill="#F9B17A"/>
+  <path d="M52 41L36 46L32 54L46 49L52 41Z" fill="#F9B17A"/>
+  <path d="M15 35L29 39L32 43L20 41L15 35Z" fill="#F9B17A"/>
+  <path d="M49 35L35 39L32 43L44 41L49 35Z" fill="#F9B17A"/>
+  <path d="M18 29L30 33L32 36L22 34L18 29Z" fill="#F9B17A"/>
+  <path d="M46 29L34 33L32 36L42 34L46 29Z" fill="#F9B17A"/>
+  <path d="M30 12H34V27H30V12Z" fill="#F9B17A"/>
+  <path d="M27 8H37V13H27V8Z" fill="#F9B17A"/>
+  <path d="M28 27H36V31H28V27Z" fill="#F9B17A"/>
+  <path d="M24 12L15 30" stroke="#F9B17A" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M40 12L49 30" stroke="#F9B17A" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M24 31L32 40L40 31" stroke="#F9B17A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 22H38" stroke="#F9B17A" stroke-width="2"/>
+  <path d="M26 26H38" stroke="#F9B17A" stroke-width="2"/>
+</svg>
