@@ -1,4 +1,4 @@
-# Shine Academy Marketplace
+# EduBridge
 
 Admin-controlled multi-instructor video course marketplace.
 
@@ -44,9 +44,9 @@ npm run dev
 The frontend runs on `http://localhost:3000` and expects the API at `http://localhost:4000`.
 
 ## Local demo users
-- `admin@shine.mn` / `123456`
-- `nomin@shine.mn` / `123456`
-- `ariunaa@shine.mn` / `123456`
+- `admin@edubridge.mn` / `123456`
+- `nomin@edubridge.mn` / `123456`
+- `ariunaa@edubridge.mn` / `123456`
 
 ## Notes
 - Videos should live in `Mux`, `Bunny Stream`, `Vimeo`, `Cloudinary`, or `S3`, not inside the database.

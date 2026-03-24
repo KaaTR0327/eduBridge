@@ -5,23 +5,27 @@ const prisma = require('../lib/prisma');
 const asyncHandler = require('../middleware/asyncHandler');
 const { signToken, authenticate } = require('../middleware/auth');
 const { serializeUser } = require('../utils/serialize');
+const { normalizeEmail, normalizePassword, normalizeRole, normalizeString } = require('../utils/validation');
+const { badRequest } = require('../utils/http');
 
 const router = express.Router();
 
 router.post('/register', asyncHandler(async (req, res) => {
-  const { fullName, email, password, role } = req.body;
-
-  if (!fullName || !email || !password) {
-    return res.status(400).json({ error: 'fullName, email, and password are required' });
-  }
-
-  const normalizedRole = role && Object.values(Role).includes(role) && role !== Role.ADMIN ? role : Role.STUDENT;
+  const fullName = normalizeString(req.body.fullName, { field: 'fullName', required: true, min: 2, max: 120 });
+  const email = normalizeEmail(req.body.email);
+  const password = normalizePassword(req.body.password);
+  const normalizedRole = normalizeRole(req.body.role, Role.STUDENT);
   const passwordHash = await bcrypt.hash(password, 10);
+
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    throw badRequest('email already exists');
+  }
 
   const user = await prisma.user.create({
     data: {
       fullName,
-      email: email.toLowerCase(),
+      email,
       passwordHash,
       role: normalizedRole
     }
@@ -47,14 +51,11 @@ router.post('/register', asyncHandler(async (req, res) => {
 }));
 
 router.post('/login', asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'email and password are required' });
-  }
+  const email = normalizeEmail(req.body.email);
+  const password = normalizeString(req.body.password, { field: 'password', required: true, min: 6, max: 128 });
 
   const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email },
     include: { instructorProfile: true }
   });
 
@@ -65,6 +66,10 @@ router.post('/login', asyncHandler(async (req, res) => {
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
     return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  if (user.status !== 'ACTIVE') {
+    return res.status(403).json({ error: 'Account is not active' });
   }
 
   return res.json({

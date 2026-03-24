@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { apiRequest } from '../lib/api';
-import { fetchCategories } from '../lib/content';
+import { fetchCategories, getLocalizedPriceOption } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function UploadPage() {
@@ -17,30 +17,35 @@ export function UploadPage() {
 
   const copy = useMemo(() => (locale === 'mn'
     ? {
-        eyebrow: 'Нөөц оруулах',
-        title: 'EduBridge орчинд хэрэгтэй нөөцөө нийтлэх',
-        body: 'Backend нь одоо resource төвтэй API layer-тай болсон. Category, title, description, cover, price нь бодитоор хадгалагдана.',
+        eyebrow: 'Нөөц нийтлэх',
+        title: 'EduBridge дээр хэрэгтэй нөөцөө нийтлээрэй',
+        body: 'Backend одоо resource төвтэй API layer-тай болсон. Ангилал, гарчиг, тайлбар, cover, үнэ зэрэг мэдээлэл бодитоор хадгалагдана.',
         titleField: 'Гарчиг',
         titlePlaceholder: 'Жишээ нь: Clean dashboard starter kit',
         category: 'Ангилал',
         description: 'Тайлбар',
-        descriptionPlaceholder: 'Юу багтсан, хэнд зориулагдсан, яагаад хэрэгтэйг тайлбарла.',
+        descriptionPlaceholder: 'Юу багтсан, хэнд зориулагдсан, яагаад хэрэгтэйг тайлбарлана уу.',
         shortDescription: 'Товч тайлбар',
         shortDescriptionPlaceholder: 'Карт дээр харагдах богино тайлбар',
-        fileType: 'Төрөл',
-        thumbnailUrl: 'Cover зураг URL',
+        fileType: 'Хэл',
+        thumbnailUrl: 'Cover зургийн URL',
         pricing: 'Үнийн төрөл',
         price: 'Үнэ',
         publish: 'Нөөц үүсгэх',
         loading: 'Ачаалж байна...',
-        loginNeeded: 'Нөөц оруулахын тулд эхлээд нэвтэрнэ үү.',
-        instructorOnly: 'Нөөц оруулахын тулд бүтээгч эрхтэй account хэрэгтэй.',
-        pendingApproval: 'Таны creator profile approve хийгдээгүй байна. Resource нийтлэхийн тулд approve шаардлагатай.',
+        loginNeeded: 'Нөөц нийтлэхийн тулд эхлээд нэвтэрнэ үү.',
+        instructorOnly: 'Нөөц нийтлэхийн тулд бүтээгч эрхтэй бүртгэл хэрэгтэй.',
+        pendingApproval: 'Таны бүтээгчийн профайл одоогоор батлагдаагүй байна. Нийтлэхийн тулд баталгаажуулалт шаардлагатай.',
         success: 'Нөөц backend дээр амжилттай үүслээ.',
-        fileNote: 'Одоогийн backend file upload дэмжихгүй байгаа тул сонгосон file name-ийг зөвхөн local preview болгож харуулж байна.'
+        fileNote: 'Одоогийн backend file upload дэмжихгүй байгаа тул сонгосон файлын нэрийг зөвхөн local preview байдлаар харуулж байна.',
+        signIn: 'Нэвтрэх',
+        createCreatorAccount: 'Бүтээгчийн бүртгэл үүсгэх',
+        resourceFile: 'Нөөцийн файл',
+        previewFile: 'Preview файл',
+        fileTypePlaceholder: 'Монгол эсвэл Англи'
       }
     : {
-        eyebrow: 'Upload resource',
+        eyebrow: 'Publish resource',
         title: 'Publish a useful resource into EduBridge',
         body: 'The backend now exposes a resource-centered API. Category, title, description, cover, and pricing are stored for real.',
         titleField: 'Title',
@@ -50,17 +55,22 @@ export function UploadPage() {
         descriptionPlaceholder: 'Describe what is included, who it is for, and why it is useful.',
         shortDescription: 'Short description',
         shortDescriptionPlaceholder: 'Short preview text for cards',
-        fileType: 'Type',
+        fileType: 'Language',
         thumbnailUrl: 'Cover image URL',
         pricing: 'Pricing',
         price: 'Price',
         publish: 'Create resource',
         loading: 'Loading...',
-        loginNeeded: 'Please sign in before uploading a resource.',
+        loginNeeded: 'Please sign in before publishing a resource.',
         instructorOnly: 'You need a creator account to publish resources.',
         pendingApproval: 'Your creator profile is not approved yet. Publishing requires approval first.',
         success: 'Resource created successfully on the backend.',
-        fileNote: 'The backend does not support file upload yet, so selected filenames are shown only as local previews.'
+        fileNote: 'The backend does not support file upload yet, so selected filenames are shown only as local previews.',
+        signIn: 'Sign in',
+        createCreatorAccount: 'Create creator account',
+        resourceFile: 'Resource file',
+        previewFile: 'Preview file',
+        fileTypePlaceholder: 'Mongolian or English'
       }), [locale]);
 
   useEffect(() => {
@@ -128,7 +138,7 @@ export function UploadPage() {
         <div className="empty-state">
           <h1 className="page-title text-white">{copy.loginNeeded}</h1>
           <Link to="/auth#signin" className="mt-6 inline-flex rounded-md bg-[#f9b17a] px-4 py-3 text-sm font-medium text-[#232844]">
-            {locale === 'mn' ? 'Нэвтрэх' : 'Sign in'}
+            {copy.signIn}
           </Link>
         </div>
       </main>
@@ -141,7 +151,7 @@ export function UploadPage() {
         <div className="empty-state">
           <h1 className="page-title text-white">{copy.instructorOnly}</h1>
           <Link to="/auth#signup" className="mt-6 inline-flex rounded-md bg-[#f9b17a] px-4 py-3 text-sm font-medium text-[#232844]">
-            {locale === 'mn' ? 'Creator бүртгэл үүсгэх' : 'Create creator account'}
+            {copy.createCreatorAccount}
           </Link>
         </div>
       </main>
@@ -189,7 +199,7 @@ export function UploadPage() {
           </Field>
 
           <Field label={copy.fileType}>
-            <input name="fileType" type="text" placeholder="Mongolian, English, Beginner" className="input-base" />
+            <input name="fileType" type="text" placeholder={copy.fileTypePlaceholder} className="input-base" />
           </Field>
 
           <Field label={copy.thumbnailUrl} className="lg:col-span-2">
@@ -198,7 +208,7 @@ export function UploadPage() {
         </section>
 
         <section className="surface-panel grid gap-6 p-8 lg:grid-cols-2">
-          <Field label="Resource file">
+          <Field label={copy.resourceFile}>
             <UploadInput
               label={copy.fileNote}
               filename={files.resource}
@@ -206,7 +216,7 @@ export function UploadPage() {
             />
           </Field>
 
-          <Field label="Preview file">
+          <Field label={copy.previewFile}>
             <UploadInput
               label={copy.fileNote}
               filename={files.preview}
@@ -218,8 +228,8 @@ export function UploadPage() {
         <section className="surface-panel grid gap-6 p-8 lg:grid-cols-[1fr,1fr]">
           <Field label={copy.pricing}>
             <select className="select-base" value={pricing} onChange={(event) => setPricing(event.target.value)}>
-              <option value="free">Free</option>
-              <option value="paid">Paid</option>
+              <option value="free">{getLocalizedPriceOption('free', locale)}</option>
+              <option value="paid">{getLocalizedPriceOption('paid', locale)}</option>
             </select>
           </Field>
 

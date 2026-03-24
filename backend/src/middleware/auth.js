@@ -1,7 +1,12 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
+const { HttpError } = require('../utils/http');
 
 function signToken(user) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
   return jwt.sign(
     {
       sub: user.id,
@@ -31,6 +36,10 @@ async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'Invalid token user' });
     }
 
+    if (user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Account is not active' });
+    }
+
     req.user = user;
     return next();
   } catch (_error) {
@@ -41,11 +50,11 @@ async function authenticate(req, res, next) {
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return next(new HttpError(401, 'Authentication required'));
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Forbidden for this role' });
+      return next(new HttpError(403, 'Forbidden for this role'));
     }
 
     return next();

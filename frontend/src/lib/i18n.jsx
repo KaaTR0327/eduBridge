@@ -8,7 +8,13 @@ export function LanguageProvider({ children }) {
     if (typeof window === 'undefined') {
       return 'mn';
     }
-    return window.localStorage.getItem(STORAGE_KEY) || 'mn';
+    const savedLocale = window.localStorage.getItem(STORAGE_KEY);
+    if (savedLocale === 'mn' || savedLocale === 'en') {
+      return savedLocale;
+    }
+
+    const browserLocale = window.navigator.language?.toLowerCase() || '';
+    return browserLocale.startsWith('mn') ? 'mn' : 'en';
   });
 
   useEffect(() => {

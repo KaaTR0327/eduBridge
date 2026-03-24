@@ -24,8 +24,8 @@ router.get('/overview', asyncHandler(async (_req, res) => {
   ]);
 
   res.json({
-    productName: 'Shine Academy Marketplace',
-    summary: 'Admin-controlled multi-instructor platform for selling video lessons online.',
+    productName: 'EduBridge',
+    summary: 'Structured marketplace for digital knowledge, creator resources, and learning materials.',
     metrics: {
       totalUsers,
       totalInstructors,

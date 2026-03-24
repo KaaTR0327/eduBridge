@@ -29,7 +29,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       fullName: 'Platform Admin',
-      email: 'admin@shine.mn',
+      email: 'admin@edubridge.mn',
       passwordHash,
       role: Role.ADMIN
     }
@@ -38,7 +38,7 @@ async function main() {
   const instructorOne = await prisma.user.create({
     data: {
       fullName: 'Nomin Erdene',
-      email: 'nomin@shine.mn',
+      email: 'nomin@edubridge.mn',
       passwordHash,
       role: Role.INSTRUCTOR,
       instructorProfile: {
@@ -56,7 +56,7 @@ async function main() {
   const instructorTwo = await prisma.user.create({
     data: {
       fullName: 'Bilguun Purev',
-      email: 'bilguun@shine.mn',
+      email: 'bilguun@edubridge.mn',
       passwordHash,
       role: Role.INSTRUCTOR,
       instructorProfile: {
@@ -73,7 +73,7 @@ async function main() {
   const studentOne = await prisma.user.create({
     data: {
       fullName: 'Ariunaa Bat',
-      email: 'ariunaa@shine.mn',
+      email: 'ariunaa@edubridge.mn',
       passwordHash,
       role: Role.STUDENT
     }
@@ -82,7 +82,7 @@ async function main() {
   const studentTwo = await prisma.user.create({
     data: {
       fullName: 'Temuulen Gan',
-      email: 'temuulen@shine.mn',
+      email: 'temuulen@edubridge.mn',
       passwordHash,
       role: Role.STUDENT
     }

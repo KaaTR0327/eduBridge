@@ -3,7 +3,7 @@ import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 
 import { FilterSidebar } from '../components/filter-sidebar';
 import { ResourceCard } from '../components/resource-card';
 import { SearchBar } from '../components/search-bar';
-import { fetchCategories, fetchResources, getCategoryLabel, getLocalizedField } from '../lib/content';
+import { fetchCategories, fetchResources, getCategoryLabel, getLanguageLabel, getLevelLabel } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 const tags = ['React', 'Design', 'Mongolian', 'English', 'Beginner', 'Intermediate', 'Advanced'];
@@ -54,16 +54,16 @@ export function ExplorePage() {
 
   const copy = locale === 'mn'
     ? {
-        eyebrow: 'Нөөц хайх',
-        title: 'Файл, мэдлэгийн бүтээгдэхүүн, материал, практик resource-уудаа олоорой',
-        description: 'EduBridge нь ангилал, бүтээгч, preview, шүүлтүүрээр хэрэгтэй нөөцөө хурдан олоход тусална.',
-        searchPlaceholder: 'Гарчиг, бүтээгч, ангилал эсвэл төрлөөр хайх',
+        eyebrow: 'Нөөц судлах',
+        title: 'Хэрэгтэй дижитал нөөц, бүтээгчийн контент, сургалтын материалыг олоорой',
+        description: 'EduBridge нь бүтээгч, ангилал, tag, preview ашиглан хэрэгтэй нөөцийг хурдан олоход тусална.',
+        searchPlaceholder: 'Гарчиг, бүтээгч, ангилал, хэл эсвэл түвшнээр хайх',
         filters: 'Шүүлтүүр',
         close: 'Хаах',
         resourcesAvailable: 'нөөц байна',
         noResultsTitle: 'Тохирох нөөц олдсонгүй',
         noResultsBody: 'Хайлтын үг эсвэл шүүлтүүрээ өөрчлөөд дахин шалгана уу.',
-        loadError: 'Нөөц уншиж чадсангүй.',
+        loadError: 'Нөөц ачаалж чадсангүй.',
         loading: 'Нөөцүүдийг ачаалж байна...',
         clearAll: 'Бүгдийг цэвэрлэх',
         priceLabels: {
@@ -75,8 +75,8 @@ export function ExplorePage() {
         sorts: {
           newest: 'Шинэ',
           trending: 'Тренд',
-          downloads: 'Хамгийн их үзэлттэй',
-          rating: 'Өндөр үнэлгээтэй',
+          downloads: 'Хамгийн их таталттай',
+          rating: 'Хамгийн өндөр үнэлгээтэй',
           priceLow: 'Үнэ өсөхөөр',
           priceHigh: 'Үнэ буурахаар'
         }
@@ -85,7 +85,7 @@ export function ExplorePage() {
         eyebrow: 'Explore resources',
         title: 'Discover digital resources, creator content, and structured learning materials',
         description: 'EduBridge helps people find useful resources quickly through creators, categories, tags, and clean previews.',
-        searchPlaceholder: 'Search by title, creator, category, or type',
+        searchPlaceholder: 'Search by title, creator, category, language, or level',
         filters: 'Filters',
         close: 'Close',
         resourcesAvailable: 'resources available',
@@ -103,7 +103,7 @@ export function ExplorePage() {
         sorts: {
           newest: 'Newest',
           trending: 'Trending',
-          downloads: 'Most viewed',
+          downloads: 'Most downloaded',
           rating: 'Highest rated',
           priceLow: 'Price: low to high',
           priceHigh: 'Price: high to low'
@@ -115,9 +115,13 @@ export function ExplorePage() {
       if (!deferredSearch) return true;
       const haystack = [
         resource.title,
+        resource.titleMn,
         resource.description,
+        resource.descriptionMn,
         resource.shortDescription,
-        resource.fileType,
+        resource.shortDescriptionMn,
+        resource.language,
+        resource.level,
         resource.creator?.name,
         resource.category,
         ...resource.tags
@@ -125,9 +129,19 @@ export function ExplorePage() {
       return haystack.includes(deferredSearch);
     };
 
-    const matchesTag = (resource) => selectedTags.length === 0 || selectedTags.some((tag) => resource.tags.includes(tag) || resource.fileType.includes(tag) || resource.category.includes(tag));
+    const matchesTag = (resource) => selectedTags.length === 0 || selectedTags.some((tag) => (
+      resource.tags.includes(tag) ||
+      resource.language === tag ||
+      resource.level === tag ||
+      resource.category === tag
+    ));
+
     const matchesCategory = (resource) => selectedCategories.length === 0 || selectedCategories.includes(resource.category);
-    const matchesFileType = (resource) => selectedFileTypes.length === 0 || selectedFileTypes.some((type) => resource.fileType.includes(type));
+
+    const matchesFileType = (resource) => selectedFileTypes.length === 0 || selectedFileTypes.some((type) => (
+      resource.language === type || resource.level === type
+    ));
+
     const matchesPrice = (resource) => {
       if (selectedPriceFilters.length === 0) return true;
       return selectedPriceFilters.some((filter) => {
@@ -153,7 +167,10 @@ export function ExplorePage() {
       if (sortBy === 'priceLow') return (left.isFree ? 0 : left.price) - (right.isFree ? 0 : right.price);
       if (sortBy === 'priceHigh') return (right.isFree ? 0 : right.price) - (left.isFree ? 0 : left.price);
       if (sortBy === 'trending') return (right.downloads + right.favorites) - (left.downloads + left.favorites);
-      return right.id.localeCompare(left.id);
+
+      const rightDate = new Date(right.updatedAt || right.createdAt || 0).getTime();
+      const leftDate = new Date(left.updatedAt || left.createdAt || 0).getTime();
+      return rightDate - leftDate;
     });
 
     return sorted;
@@ -210,6 +227,8 @@ export function ExplorePage() {
       <div className="mt-6 flex flex-wrap gap-2">
         {tags.map((tag) => {
           const active = selectedTags.includes(tag);
+          const label = getLanguageLabel(tag, locale) || getLevelLabel(tag, locale) || getCategoryLabel(tag, locale) || tag;
+
           return (
             <button
               key={tag}
@@ -217,7 +236,7 @@ export function ExplorePage() {
               onClick={() => toggleFromList(tag, selectedTags, setSelectedTags)}
               className={`rounded-sm border px-3 py-2 text-sm font-medium transition ${active ? 'border-[#f9b17a] bg-[#f9b17a]/15 text-[#f9b17a]' : 'border-white/10 bg-white/10 text-slate-200 hover:border-[#f9b17a] hover:text-[#f9b17a]'}`}
             >
-              {tag}
+              {label}
             </button>
           );
         })}
@@ -253,13 +272,13 @@ export function ExplorePage() {
                   <ActiveChip key={category} label={getCategoryLabel(category, locale)} onRemove={() => toggleFromList(category, selectedCategories, setSelectedCategories)} />
                 ))}
                 {selectedFileTypes.map((type) => (
-                  <ActiveChip key={type} label={type} onRemove={() => toggleFromList(type, selectedFileTypes, setSelectedFileTypes)} />
+                  <ActiveChip key={type} label={getLanguageLabel(type, locale) || getLevelLabel(type, locale) || type} onRemove={() => toggleFromList(type, selectedFileTypes, setSelectedFileTypes)} />
                 ))}
                 {selectedPriceFilters.map((filter) => (
                   <ActiveChip key={filter} label={copy.priceLabels[filter] || filter} onRemove={() => toggleFromList(filter, selectedPriceFilters, setSelectedPriceFilters)} />
                 ))}
                 {selectedTags.map((tag) => (
-                  <ActiveChip key={tag} label={tag} onRemove={() => toggleFromList(tag, selectedTags, setSelectedTags)} />
+                  <ActiveChip key={tag} label={getLanguageLabel(tag, locale) || getLevelLabel(tag, locale) || getCategoryLabel(tag, locale) || tag} onRemove={() => toggleFromList(tag, selectedTags, setSelectedTags)} />
                 ))}
                 {searchValue ? <ActiveChip label={searchValue} onRemove={() => setSearchValue('')} /> : null}
               </div>

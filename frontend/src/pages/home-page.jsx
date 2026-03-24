@@ -49,20 +49,20 @@ export function HomePage() {
   const copy = locale === 'mn'
     ? {
         eyebrow: 'Ирээдүйд бэлэн дижитал нөөцийн платформ',
-        heroTitle: 'EduBridge мэдлэгийг бодит digital marketplace болгоно.',
-        heroBody: 'Код, тэмдэглэл, загвар, сургалтын материал болон бүтээгчдийн нөөцийг нэг дороос нийтэлж, олох, ашиглах боломжтой.',
+        heroTitle: 'EduBridge мэдлэгийг бодит дижитал marketplace болгоно.',
+        heroBody: 'Код, тэмдэглэл, загвар, сургалтын материал болон бүтээгчдийн нөөцийг нэг дороос нийтэлж, олж, ашиглах боломжтой.',
         explore: 'Нөөц үзэх',
-        upload: 'Нөөц оруулах',
+        upload: 'Нөөц нийтлэх',
         loading: 'Хуудсыг ачаалж байна...',
         why: 'Яагаад EduBridge',
-        whyTitle: 'Хэрэгтэй мэдлэг, бүтээгч, resource-ийг нэг дор холбосон төв орчин.',
-        whyBody: 'EduBridge нь бүтээгчдэд нийтлэх, хэрэглэгчдэд олох, багуудад хэрэгтэй материалдаа дахин эргэж ажиллах боломж олгоно.',
+        whyTitle: 'Хэрэгтэй мэдлэг, бүтээгч, дижитал нөөцийг нэг дор холбосон төв орчин.',
+        whyBody: 'EduBridge нь бүтээгчдэд нийтлэх, хэрэглэгчдэд олох, багуудад хэрэгтэй материалаа дахин ашиглах боломж олгоно.',
         categories: 'Ангилал',
-        categoriesTitle: 'Хүмүүс яг хэрэгтэй зүйлээрээ хайдаг.',
+        categoriesTitle: 'Хүмүүс яг хэрэгтэй зүйлээрээ хайдаг',
         categoriesDesc: 'Ангилал нь хэрэгтэй нөөцийг илүү хурдан олоход тусална.',
         featured: 'Онцлох',
         featuredTitle: 'Онцлох нөөцүүд',
-        featuredDesc: 'Шинэ, хэрэгтэй, бүтэцтэй resource-ууд.',
+        featuredDesc: 'Шинэ, хэрэгтэй, бүтэцтэй нөөцүүд.',
         trending: 'Тренд',
         trendingTitle: 'Их анхаарал татаж буй нөөцүүд',
         trendingDesc: 'Таталт болон хэрэглэгчийн сонирхлоор тэргүүлж буй нөөцүүд.',
@@ -73,8 +73,8 @@ export function HomePage() {
         reviews: 'Сэтгэгдэл',
         creatorButton: 'Бүтээгчийн хуудас',
         how: 'Хэрхэн ажилладаг',
-        howTitle: 'Бүтээгч, хэрэглэгч хоёрт хоёуланд нь энгийн.',
-        howDesc: 'Нийтлэхээс эхлээд олж авах хүртэлх урсгал ойлгомжтой байна.',
+        howTitle: 'Бүтээгч, хэрэглэгч хоёрт хоёуланд нь энгийн',
+        howDesc: 'Нийтлэхээс эхлээд олж авах хүртэлх урсгал ойлгомжтой байдаг.',
         viewAll: 'Бүгдийг үзэх'
       }
     : {
@@ -82,7 +82,7 @@ export function HomePage() {
         heroTitle: 'EduBridge turns knowledge into a real digital marketplace.',
         heroBody: 'Publish, discover, and use code, notes, templates, learning materials, and creator resources from one focused ecosystem.',
         explore: 'Explore resources',
-        upload: 'Start uploading',
+        upload: 'Publish resources',
         loading: 'Loading page...',
         why: 'Why EduBridge',
         whyTitle: 'One focused place for useful knowledge, creators, and digital resources.',
@@ -163,7 +163,7 @@ export function HomePage() {
           <div className="grid gap-4 md:grid-cols-3">
             {[
               locale === 'mn' ? 'Нийтлэхэд бэлэн бүтээгчийн орчин' : 'Creator-ready publishing flow',
-              locale === 'mn' ? 'Ойлгомжтой resource preview' : 'Clear resource previews',
+              locale === 'mn' ? 'Ойлгомжтой нөөцийн preview' : 'Clear resource previews',
               locale === 'mn' ? 'Нэг дор төвлөрсөн нөөцийн сан' : 'Focused resource library'
             ].map((item) => (
               <div key={item} className="surface-panel p-6">

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ResourceCard } from '../components/resource-card';
 import { useAuth } from '../lib/auth';
 import { apiRequest } from '../lib/api';
-import { fetchResourceBySlug, fetchResources, getCategoryLabel, getLocalizedField } from '../lib/content';
+import { fetchResourceBySlug, fetchResources, formatResourceFileType, getCategoryLabel, getLocalizedField } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function ResourceDetailPage() {
@@ -24,11 +24,11 @@ export function ResourceDetailPage() {
         notFoundBody: 'Таны хайж буй нөөц одоогоор байхгүй байна.',
         backToExplore: 'Судлах хуудас руу буцах',
         pageLabel: 'Нөөцийн дэлгэрэнгүй',
-        pageBody: 'Үнэ цэнэ, бүтээгч, preview болон дараагийн алхмыг ойлгоход зориулсан дэлгэрэнгүй хуудас.',
+        pageBody: 'Үнэ цэнэ, бүтээгч, preview болон дараагийн алхмаа ойлгоход зориулсан дэлгэрэнгүй хуудас.',
         rating: 'Үнэлгээ',
         downloads: 'Таталт',
         saved: 'Сэтгэгдэл',
-        preview: 'Товч агуулга',
+        preview: 'Товч танилцуулга',
         creator: 'Бүтээгч',
         price: 'Үнэ',
         free: 'Үнэгүй',
@@ -36,14 +36,13 @@ export function ResourceDetailPage() {
         paidResource: 'Төлбөртэй нөөц',
         download: 'Нөөц авах',
         buy: 'Одоо авах',
-        saveForLater: 'Хадгалах',
+        saveForLater: 'Дараа хадгалах',
         reviews: 'Сэтгэгдэл',
         related: 'Төстэй нөөц',
         moreIn: 'Бусад',
         loading: 'Нөөцийг ачаалж байна...',
-        signInFirst: 'Үйлдэл хийхийн өмнө эхлээд нэвтэрнэ үү.',
         enrollSuccess: 'Нөөц амжилттай нэмэгдлээ.',
-        saveHint: 'Хадгалах feature дараагийн алхамд backend дээр холбоно.'
+        saveHint: 'Хадгалах боломжийг дараагийн алхамд backend-тэй холбоно.'
       }
     : {
         notFound: 'Resource not found',
@@ -67,9 +66,8 @@ export function ResourceDetailPage() {
         related: 'Related resources',
         moreIn: 'More in',
         loading: 'Loading resource...',
-        signInFirst: 'Please sign in before taking this action.',
         enrollSuccess: 'Resource added successfully.',
-        saveHint: 'Save for later will be connected to backend next.'
+        saveHint: 'Save for later will be connected to the backend next.'
       }), [locale]);
 
   useEffect(() => {
@@ -163,7 +161,7 @@ export function ResourceDetailPage() {
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <span className="font-medium text-[#f9b17a]">{getCategoryLabel(resource.category, locale)}</span>
               <span className="text-slate-400">/</span>
-              <span className="text-slate-300">{resource.fileType}</span>
+              <span className="text-slate-300">{formatResourceFileType(resource, locale)}</span>
             </div>
             <h1 className="page-title mt-4 text-white">{getLocalizedField(resource, 'title', locale)}</h1>
             <p className="body-copy mt-5 max-w-3xl">{getLocalizedField(resource, 'description', locale)}</p>
@@ -242,15 +240,19 @@ export function ResourceDetailPage() {
           <div className="surface-panel p-6">
             <h2 className="card-title text-white">{copy.reviews}</h2>
             <div className="mt-5 space-y-4">
-              {[
-                ['Lena Park', locale === 'mn' ? 'Файлууд нь цэгцтэй, preview дээрхтэйгээ яг адилхан байсан.' : 'Clear files, clean organization, and exactly what I expected from the preview.'],
-                ['Jonas Reed', locale === 'mn' ? 'Хэрэглэхэд хялбар, бүтэц нь ойлгомжтой нөөц байна.' : 'Useful resource with practical structure and easy-to-use files.']
-              ].map(([name, review]) => (
-                <div key={name} className="rounded-md border border-white/10 p-4">
-                  <p className="text-sm font-medium text-white">{name}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200">{review}</p>
+              {resource.reviewsCount > 0 ? (
+                <div className="rounded-md border border-white/10 p-4 text-sm leading-6 text-slate-200">
+                  {locale === 'mn'
+                    ? `Энэ нөөц ${resource.reviewsCount} сэтгэгдэлтэй, дундаж үнэлгээ нь ${resource.rating} байна.`
+                    : `This resource has ${resource.reviewsCount} reviews with an average rating of ${resource.rating}.`}
                 </div>
-              ))}
+              ) : (
+                <div className="rounded-md border border-white/10 p-4 text-sm leading-6 text-slate-200">
+                  {locale === 'mn'
+                    ? 'Одоогоор сэтгэгдэл нэмэгдээгүй байна.'
+                    : 'No reviews have been added yet.'}
+                </div>
+              )}
             </div>
           </div>
         </aside>

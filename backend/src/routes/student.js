@@ -5,6 +5,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { requireRole } = require('../middleware/auth');
 const { pickCourseInclude, mapCourse } = require('../utils/courseMapper');
 const { serializeUser } = require('../utils/serialize');
+const { normalizeNumber, normalizeString } = require('../utils/validation');
 
 const router = express.Router();
 
@@ -84,8 +85,8 @@ router.post('/courses/:courseId/enroll', asyncHandler(async (req, res) => {
     const payment = await tx.payment.create({
       data: {
         orderId: order.id,
-        provider: req.body.provider || 'SIMULATED',
-        paymentMethod: req.body.paymentMethod || 'demo',
+        provider: normalizeString(req.body.provider, { field: 'provider', max: 80 }) || 'SIMULATED',
+        paymentMethod: normalizeString(req.body.paymentMethod, { field: 'paymentMethod', max: 80 }) || 'demo',
         providerTransactionId: `demo-${Date.now()}`,
         amount: course.price,
         status: PaymentStatus.PAID,
@@ -161,7 +162,9 @@ router.patch('/progress/:lessonId', asyncHandler(async (req, res) => {
 }));
 
 router.post('/reviews', asyncHandler(async (req, res) => {
-  const { courseId, rating, comment } = req.body;
+  const courseId = normalizeString(req.body.courseId, { field: 'courseId', required: true });
+  const rating = normalizeNumber(req.body.rating, { field: 'rating', required: true, min: 1, max: 5, integer: true });
+  const comment = normalizeString(req.body.comment, { field: 'comment', max: 1000 }) || null;
 
   const enrollment = await prisma.enrollment.findUnique({
     where: {
@@ -184,13 +187,13 @@ router.post('/reviews', asyncHandler(async (req, res) => {
       }
     },
     update: {
-      rating: Number(rating),
+      rating,
       comment
     },
     create: {
       userId: req.user.id,
       courseId,
-      rating: Number(rating),
+      rating,
       comment
     }
   });

@@ -16,7 +16,7 @@ app.get('/health', async (_req, res, next) => {
     await prisma.$queryRaw`SELECT 1`;
     res.json({
       ok: true,
-      service: 'shine-backend',
+      service: 'edubridge-backend',
       database: 'connected',
       time: new Date().toISOString()
     });
@@ -33,5 +33,5 @@ app.use('/api', apiRouter);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`Shine backend running on http://localhost:${PORT}`);
+  console.log(`EduBridge backend running on http://localhost:${PORT}`);
 });

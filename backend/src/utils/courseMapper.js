@@ -43,13 +43,15 @@ function pickCourseInclude() {
 }
 
 function mapCourse(course) {
-  const lessonCount = course.sections.reduce((sum, section) => sum + section.lessons.length, 0);
-  const durationSeconds = course.sections.reduce(
+  const sections = Array.isArray(course.sections) ? course.sections : [];
+  const reviews = Array.isArray(course.reviews) ? course.reviews : [];
+  const lessonCount = sections.reduce((sum, section) => sum + section.lessons.length, 0);
+  const durationSeconds = sections.reduce(
     (sum, section) => sum + section.lessons.reduce((inner, lesson) => inner + lesson.durationSeconds, 0),
     0
   );
-  const averageRating = course.reviews.length
-    ? Number((course.reviews.reduce((sum, review) => sum + review.rating, 0) / course.reviews.length).toFixed(1))
+  const averageRating = reviews.length
+    ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
     : 0;
 
   return {

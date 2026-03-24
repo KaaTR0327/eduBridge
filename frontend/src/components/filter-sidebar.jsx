@@ -1,4 +1,4 @@
-import { getCategoryLabel } from '../lib/content';
+import { getCategoryLabel, getLanguageLabel, getLevelLabel } from '../lib/content';
 
 const priceOptions = ['free', 'paid', 'under-20', '20-plus'];
 const fileTypeOptions = ['Mongolian', 'English', 'Beginner', 'Intermediate', 'Advanced'];
@@ -19,7 +19,7 @@ export function FilterSidebar({
         title: 'Шүүлтүүр',
         categories: 'Ангилал',
         price: 'Үнэ',
-        fileType: 'Төрөл',
+        fileType: 'Хэл ба түвшин',
         reset: 'Шүүлтүүр цэвэрлэх',
         prices: {
           free: 'Зөвхөн үнэгүй',
@@ -32,7 +32,7 @@ export function FilterSidebar({
         title: 'Filters',
         categories: 'Categories',
         price: 'Price',
-        fileType: 'Type',
+        fileType: 'Language & level',
         reset: 'Reset filters',
         prices: {
           free: 'Free only',
@@ -83,7 +83,7 @@ export function FilterSidebar({
         {fileTypeOptions.map((item) => (
           <FilterCheckbox
             key={item}
-            label={item}
+            label={getLanguageLabel(item, locale) || getLevelLabel(item, locale) || item}
             checked={selectedFileTypes.includes(item)}
             onChange={() => onToggleFileType(item)}
           />

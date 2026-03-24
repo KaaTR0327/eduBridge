@@ -1,6 +1,6 @@
 import { ArrowUpRight, Download, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getLocalizedField, getTypeLabel } from '../lib/content';
+import { formatResourceFileType, getLocalizedField, getTypeLabel } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function ResourceCard({ resource }) {
@@ -47,8 +47,8 @@ export function ResourceCard({ resource }) {
 
           <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4 text-sm text-slate-300">
             <div>
-              <p className="font-medium text-white">{resource.creator?.name || 'EduBridge Creator'}</p>
-              <p>{resource.fileType}</p>
+              <p className="font-medium text-white">{resource.creator?.name || (locale === 'mn' ? 'EduBridge бүтээгч' : 'EduBridge Creator')}</p>
+              <p>{formatResourceFileType(resource, locale)}</p>
             </div>
 
             <div className="space-y-1 text-right">

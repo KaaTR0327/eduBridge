@@ -24,7 +24,7 @@ export function CreatorProfilePage() {
         published: 'Нийтэлсэн нөөцүүд',
         items: 'ширхэг',
         storefrontTitle: 'Бүтээгчийн storefront',
-        storefrontBody: 'EduBridge-ийн бүтээгчийн хуудас нь итгэл, танигдах байдал, тогтвортой нийтлэлтийг харуулдаг төв цэг байна.',
+        storefrontBody: 'EduBridge-ийн бүтээгчийн хуудас нь итгэл, танигдах байдал, тогтвортой нийтлэлийг нэг дор харуулдаг төв цэг юм.',
         loading: 'Бүтээгчийн мэдээллийг ачаалж байна...'
       }
     : {

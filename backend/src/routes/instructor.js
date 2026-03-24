@@ -6,13 +6,15 @@ const { requireRole } = require('../middleware/auth');
 const { slugify } = require('../utils/slugify');
 const { pickCourseInclude, mapCourse } = require('../utils/courseMapper');
 const { serializeUser } = require('../utils/serialize');
+const { normalizeNumber, normalizeString } = require('../utils/validation');
 
 const router = express.Router();
 
 router.use(requireRole(Role.INSTRUCTOR));
 
 router.post('/apply', asyncHandler(async (req, res) => {
-  const { bio, expertise } = req.body;
+  const bio = normalizeString(req.body.bio, { field: 'bio', max: 1000 }) || null;
+  const expertise = normalizeString(req.body.expertise, { field: 'expertise', max: 200 }) || null;
   const profile = await prisma.instructorProfile.upsert({
     where: { userId: req.user.id },
     update: {
@@ -72,11 +74,14 @@ router.post('/courses', asyncHandler(async (req, res) => {
     return res.status(403).json({ error: 'Instructor is not approved yet' });
   }
 
-  const { categoryId, title, description, shortDescription, price, thumbnailUrl, level, language } = req.body;
-
-  if (!categoryId || !title || !description || price === undefined) {
-    return res.status(400).json({ error: 'categoryId, title, description, and price are required' });
-  }
+  const categoryId = normalizeString(req.body.categoryId, { field: 'categoryId', required: true });
+  const title = normalizeString(req.body.title, { field: 'title', required: true, min: 3, max: 160 });
+  const description = normalizeString(req.body.description, { field: 'description', required: true, min: 20, max: 5000 });
+  const shortDescription = normalizeString(req.body.shortDescription, { field: 'shortDescription', max: 240 }) || null;
+  const price = normalizeNumber(req.body.price, { field: 'price', required: true, min: 0 });
+  const thumbnailUrl = normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null;
+  const level = normalizeString(req.body.level, { field: 'level', max: 60 }) || null;
+  const language = normalizeString(req.body.language, { field: 'language', max: 60 }) || null;
 
   const course = await prisma.course.create({
     data: {
@@ -86,7 +91,7 @@ router.post('/courses', asyncHandler(async (req, res) => {
       slug: `${slugify(title)}-${Date.now()}`,
       description,
       shortDescription,
-      price: Number(price),
+      price,
       thumbnailUrl,
       level,
       language,
@@ -114,15 +119,15 @@ router.put('/courses/:courseId', asyncHandler(async (req, res) => {
     where: { id: existing.id },
     data: {
       categoryId: req.body.categoryId || existing.categoryId,
-      title: req.body.title || existing.title,
-      slug: req.body.title ? `${slugify(req.body.title)}-${existing.id.slice(-6)}` : existing.slug,
-      description: req.body.description || existing.description,
-      shortDescription: req.body.shortDescription !== undefined ? req.body.shortDescription : existing.shortDescription,
-      price: req.body.price !== undefined ? Number(req.body.price) : existing.price,
-      thumbnailUrl: req.body.thumbnailUrl !== undefined ? req.body.thumbnailUrl : existing.thumbnailUrl,
-      introVideoUrl: req.body.introVideoUrl !== undefined ? req.body.introVideoUrl : existing.introVideoUrl,
-      level: req.body.level !== undefined ? req.body.level : existing.level,
-      language: req.body.language !== undefined ? req.body.language : existing.language,
+      title: req.body.title ? normalizeString(req.body.title, { field: 'title', min: 3, max: 160 }) : existing.title,
+      slug: req.body.title ? `${slugify(normalizeString(req.body.title, { field: 'title', min: 3, max: 160 }))}-${existing.id.slice(-6)}` : existing.slug,
+      description: req.body.description ? normalizeString(req.body.description, { field: 'description', min: 20, max: 5000 }) : existing.description,
+      shortDescription: req.body.shortDescription !== undefined ? (normalizeString(req.body.shortDescription, { field: 'shortDescription', max: 240 }) || null) : existing.shortDescription,
+      price: req.body.price !== undefined ? normalizeNumber(req.body.price, { field: 'price', min: 0 }) : existing.price,
+      thumbnailUrl: req.body.thumbnailUrl !== undefined ? (normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null) : existing.thumbnailUrl,
+      introVideoUrl: req.body.introVideoUrl !== undefined ? (normalizeString(req.body.introVideoUrl, { field: 'introVideoUrl', max: 2000 }) || null) : existing.introVideoUrl,
+      level: req.body.level !== undefined ? (normalizeString(req.body.level, { field: 'level', max: 60 }) || null) : existing.level,
+      language: req.body.language !== undefined ? (normalizeString(req.body.language, { field: 'language', max: 60 }) || null) : existing.language,
       status: existing.status === CourseStatus.REJECTED ? CourseStatus.DRAFT : existing.status,
       rejectedReason: null
     },
@@ -148,8 +153,8 @@ router.post('/courses/:courseId/sections', asyncHandler(async (req, res) => {
   const section = await prisma.courseSection.create({
     data: {
       courseId: course.id,
-      title: req.body.title,
-      sortOrder: req.body.sortOrder || course.sections.length + 1
+      title: normalizeString(req.body.title, { field: 'title', required: true, min: 2, max: 160 }),
+      sortOrder: normalizeNumber(req.body.sortOrder, { field: 'sortOrder', min: 1, integer: true }) || course.sections.length + 1
     }
   });
 
@@ -172,13 +177,13 @@ router.post('/sections/:sectionId/lessons', asyncHandler(async (req, res) => {
   const lesson = await prisma.lesson.create({
     data: {
       sectionId: section.id,
-      title: req.body.title,
-      videoProvider: req.body.videoProvider,
-      videoUrl: req.body.videoUrl,
-      thumbnailUrl: req.body.thumbnailUrl,
-      durationSeconds: req.body.durationSeconds ? Number(req.body.durationSeconds) : 0,
-      isPreview: Boolean(req.body.isPreview),
-      sortOrder: req.body.sortOrder || section.lessons.length + 1
+      title: normalizeString(req.body.title, { field: 'title', required: true, min: 2, max: 160 }),
+      videoProvider: normalizeString(req.body.videoProvider, { field: 'videoProvider', max: 80 }) || null,
+      videoUrl: normalizeString(req.body.videoUrl, { field: 'videoUrl', required: true, min: 8, max: 2000 }),
+      thumbnailUrl: normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null,
+      durationSeconds: normalizeNumber(req.body.durationSeconds, { field: 'durationSeconds', min: 0, integer: true }) || 0,
+      isPreview: req.body.isPreview === true,
+      sortOrder: normalizeNumber(req.body.sortOrder, { field: 'sortOrder', min: 1, integer: true }) || section.lessons.length + 1
     }
   });
 
