@@ -7,8 +7,20 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
 
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  }
+}));
 app.use(express.json());
 
 app.get('/health', async (_req, res, next) => {

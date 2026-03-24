@@ -1,34 +1,18 @@
 # EduBridge
 
-Admin-controlled multi-instructor video course marketplace.
+EduBridge is a bilingual learning-resource marketplace with a React frontend, Express backend, Prisma ORM, and PostgreSQL database.
 
-## What is included
-- `docs/system-design.md`: product and architecture spec
-- `docs/api-endpoints.md`: MVP API surface
-- `docs/roadmap.md`: delivery phases
-- `database/schema.sql`: normalized SQL schema for the platform
-- `backend/`: Express + Prisma API with JWT auth, SQLite persistence, and real CRUD
-- `frontend/`: dashboard-style UI that visualizes the platform roles, modules, workflows, and metrics
+## Stack
+- `frontend/`: React + Vite
+- `backend/`: Express + Prisma
+- `database/`: schema notes
 
-## Core platform model
-- `Student`: browses, buys, learns, tracks progress, leaves reviews
-- `Instructor`: applies for instructor status, creates courses, uploads lessons, submits for review, tracks earnings
-- `Admin`: approves instructors, moderates courses, monitors payments, manages categories and reports
+## Local Development
 
-## Main workflows
-1. Instructor registers and applies to become an instructor.
-2. Admin approves the instructor profile.
-3. Instructor creates a course, sections, lessons, and attaches hosted video URLs.
-4. Instructor submits the course for review.
-5. Admin approves or rejects the course.
-6. Student purchases the course.
-7. Payment success creates enrollment.
-8. Student watches lessons and progress is stored.
-
-## Run locally
 ### Backend
 ```bash
 cd backend
+cp .env.example .env
 npm install
 npm run db:setup
 npm run dev
@@ -37,19 +21,60 @@ npm run dev
 ### Frontend
 ```bash
 cd frontend
+cp .env.example .env
 npm install
 npm run dev
 ```
 
-The frontend runs on `http://localhost:3000` and expects the API at `http://localhost:4000`.
+Local URLs:
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:4000`
 
-## Local demo users
+## Production Plan
+- Database: `Render Postgres`
+- Backend: `Render Web Service`
+- Frontend: `Vercel`
+
+Recommended domains:
+- Frontend: `https://edubridge.mn`
+- API: `https://api.edubridge.mn`
+
+## Production Environment Variables
+
+### Backend
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `CORS_ORIGIN=https://edubridge.mn`
+
+### Frontend
+- `VITE_API_BASE_URL=https://api.edubridge.mn/api`
+
+## Render Deployment
+This repo includes `render.yaml` for backend service defaults. If you deploy manually in Render:
+
+- Root directory: `backend`
+- Build command: `npm install && npm run db:deploy`
+- Start command: `npm start`
+- Health check path: `/health`
+
+`db:deploy` currently runs:
+- `prisma generate`
+- `prisma db push`
+
+For the first production launch this is acceptable for this repo's current state. Once the schema stabilizes, switch to Prisma migrations.
+
+## Vercel Deployment
+- Import the `frontend` folder as the project root
+- Set `VITE_API_BASE_URL`
+- Keep `frontend/vercel.json` so React Router routes resolve to `index.html`
+
+## Demo Accounts
 - `admin@edubridge.mn` / `123456`
 - `nomin@edubridge.mn` / `123456`
 - `ariunaa@edubridge.mn` / `123456`
 
 ## Notes
-- Videos should live in `Mux`, `Bunny Stream`, `Vimeo`, `Cloudinary`, or `S3`, not inside the database.
-- Payments should be integrated through a gateway such as `QPay`, `Stripe`, or another local provider.
-- Backend now uses `Prisma + PostgreSQL`.
-- Update `backend/.env` with your real PostgreSQL credentials before running `npm run db:setup`.
+- Do not commit real `.env` files
+- Use a long random `JWT_SECRET` in production
+- Enable Render Postgres backups
+- Use paid plans if you need the site to stay online continuously
