@@ -6,8 +6,6 @@ const creatorRoutes = require('./creators');
 const instructorRoutes = require('./instructor');
 const studentRoutes = require('./student');
 const adminRoutes = require('./admin');
-const resourceRoutes = require('./resources');
-const creatorRoutes = require('./creators');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
