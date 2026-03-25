@@ -8,3 +8,4 @@ backend/prisma/dev.db
 backend/uploads/
 backend/.env
 frontend/.env
+frontend/.vercel/
