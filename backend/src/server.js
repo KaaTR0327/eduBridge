@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const prisma = require('./lib/prisma');
 const apiRouter = require('./routes');
@@ -22,6 +23,7 @@ app.use(cors({
   }
 }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.get('/health', async (_req, res, next) => {
   try {

@@ -19,6 +19,18 @@ function errorHandler(error, _req, res, _next) {
     return res.status(404).json({ error: 'Requested record was not found' });
   }
 
+  if (error.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'Video file is too large. Max size is 500MB.' });
+  }
+
+  if (error.name === 'MulterError') {
+    return res.status(400).json({ error: error.message || 'Invalid file upload request' });
+  }
+
+  if (error.statusCode) {
+    return res.status(error.statusCode).json({ error: error.message || 'Request failed' });
+  }
+
   return res.status(500).json({ error: 'Internal server error' });
 }
 

@@ -21,7 +21,7 @@ export function CreatorProfilePage() {
         rating: 'үнэлгээ',
         reviews: 'сэтгэгдэл',
         storefront: 'Storefront',
-        published: 'Нийтэлсэн нөөцүүд',
+        published: 'Нийтэлсэн хичээлүүд',
         items: 'ширхэг',
         storefrontTitle: 'Бүтээгчийн storefront',
         storefrontBody: 'EduBridge-ийн бүтээгчийн хуудас нь итгэл, танигдах байдал, тогтвортой нийтлэлийг нэг дор харуулдаг төв цэг юм.',

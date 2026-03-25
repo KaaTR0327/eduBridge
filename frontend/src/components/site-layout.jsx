@@ -21,20 +21,21 @@ export function SiteLayout({ children }) {
 
   const copy = locale === 'mn'
     ? {
-        tagline: 'Дижитал мэдлэг, нөөцийн төв платформ',
+        tagline: 'Дижитал мэдлэгийг холбох платформ',
         home: 'Нүүр',
         explore: 'Судлах',
-        upload: 'Нийтлэх',
+        upload: 'Оруулах',
+        admin: 'Админ',
         creators: 'Бүтээгчид',
         signIn: 'Нэвтрэх',
         signUp: 'Бүртгүүлэх',
         search: 'Хайх',
         favorites: 'Хадгалсан',
-        footerText: 'Дижитал нөөц, мэдлэгийн бүтээгдэхүүн, сургалтын материал нийтлэх, олох, ашиглахад зориулсан бүтэцтэй платформ.',
+        footerText: 'Дижитал хичээл, мэдлэгийн бүтээгдэхүүн, файл нийтлэх, олох, ашиглахад зориулсан бүтэцтэй платформ.',
         product: 'Платформ',
         categories: 'Ангилал',
         company: 'Тусламж',
-        productItems: ['Нөөц судлах', 'Нөөц нийтлэх', 'Бүтээгчийн профайл', 'Хадгалсан зүйлс'],
+        productItems: ['Хичээл хайх', 'Файл оруулах', 'Бүтээгчийн хуудас', 'Хадгалсан зүйлс'],
         categoryItems: ['Код', 'Загвар', 'UI/UX', 'Баримт'],
         companyItems: ['Тухай', 'Тусламж', 'Нөхцөл', 'Нууцлал'],
         menu: 'Цэс',
@@ -45,7 +46,8 @@ export function SiteLayout({ children }) {
         tagline: 'Bridge for digital knowledge',
         home: 'Home',
         explore: 'Explore',
-        upload: 'Publish',
+        upload: 'Upload',
+        admin: 'Admin',
         creators: 'Creators',
         signIn: 'Sign in',
         signUp: 'Sign up',
@@ -55,7 +57,7 @@ export function SiteLayout({ children }) {
         product: 'Platform',
         categories: 'Categories',
         company: 'Support',
-        productItems: ['Explore resources', 'Publish resources', 'Creator profiles', 'Saved items'],
+        productItems: ['Explore resources', 'Upload files', 'Creator profiles', 'Saved items'],
         categoryItems: ['Code', 'Templates', 'UI/UX', 'Documents'],
         companyItems: ['About', 'Support', 'Terms', 'Privacy'],
         menu: 'Menu',
@@ -66,9 +68,11 @@ export function SiteLayout({ children }) {
   const navItems = [
     { to: '/', label: copy.home, end: true },
     { to: '/explore', label: copy.explore },
-    { to: '/upload', label: copy.upload },
-    { to: '/creators/nomin-erdene', label: copy.creators }
+    { to: '/upload', label: copy.upload }
   ];
+  const visibleNavItems = user?.role === 'ADMIN'
+    ? [...navItems, { to: '/admin', label: copy.admin }]
+    : navItems;
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900">
@@ -85,7 +89,7 @@ export function SiteLayout({ children }) {
           </Link>
 
           <nav className="hidden items-center gap-4 text-sm md:flex">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `${navClassName({ isActive })} inline-flex min-w-[72px] justify-center`}>
                 {item.label}
               </NavLink>
@@ -149,7 +153,7 @@ export function SiteLayout({ children }) {
           <div className="border-t border-white/10 bg-[#232844]/95 px-4 py-4 md:hidden">
             <div className="page-shell space-y-4">
               <nav className="grid gap-2">
-                {navItems.map((item) => (
+                {visibleNavItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}

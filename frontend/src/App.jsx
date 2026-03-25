@@ -3,6 +3,7 @@ import { SiteLayout } from './components/site-layout';
 import { AuthProvider } from './lib/auth';
 import { LanguageProvider, useLanguage } from './lib/i18n';
 import { AuthPage } from './pages/auth-page';
+import { AdminDashboardPage } from './pages/admin-dashboard-page';
 import { CreatorProfilePage } from './pages/creator-profile-page';
 import { ExplorePage } from './pages/explore-page';
 import { HomePage } from './pages/home-page';
@@ -31,6 +32,8 @@ function AnimatedRoutes() {
     <div key={routeKey} className="page-transition">
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/resources/:slug" element={<ResourceDetailPage />} />
         <Route path="/upload" element={<UploadPage />} />

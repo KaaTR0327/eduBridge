@@ -12,12 +12,18 @@ export function ResourceCard({ resource }) {
     <article className="overflow-hidden rounded-md border border-white/10 bg-[#424769] text-white shadow-soft-premium transition duration-200 hover:-translate-y-0.5 hover:border-[#f9b17a]/40">
       <Link to={`/resources/${resource.slug}`} className="group block h-full focus:outline-none">
         <div className="aspect-[16/10] overflow-hidden bg-slate-100">
-          <img
-            src={resource.cover}
-            alt={getLocalizedField(resource, 'title', locale)}
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-          />
+          {resource.cover ? (
+            <img
+              src={resource.cover}
+              alt={getLocalizedField(resource, 'title', locale)}
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(249,177,122,0.26),_transparent_40%),linear-gradient(135deg,_rgba(66,71,105,1),_rgba(35,40,68,1))] px-4 text-center text-sm font-medium text-slate-100">
+              {getLocalizedField(resource, 'title', locale)}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 p-5">

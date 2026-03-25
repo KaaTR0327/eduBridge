@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { Role } = require('@prisma/client');
+const { Role, VerificationStatus } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const asyncHandler = require('../middleware/asyncHandler');
 const { signToken, authenticate } = require('../middleware/auth');
@@ -34,7 +34,9 @@ router.post('/register', asyncHandler(async (req, res) => {
   if (normalizedRole === Role.INSTRUCTOR) {
     await prisma.instructorProfile.create({
       data: {
-        userId: user.id
+        userId: user.id,
+        verificationStatus: VerificationStatus.APPROVED,
+        approvedAt: new Date()
       }
     });
   }

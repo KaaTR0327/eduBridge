@@ -3,6 +3,7 @@ const { Role, VerificationStatus, CourseStatus } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const asyncHandler = require('../middleware/asyncHandler');
 const { requireRole } = require('../middleware/auth');
+const { buildVideoUrl, removeStoredUploadByUrl, removeUploadedFile, uploadVideo } = require('../middleware/upload');
 const { slugify } = require('../utils/slugify');
 const { pickCourseInclude, mapCourse } = require('../utils/courseMapper');
 const { serializeUser } = require('../utils/serialize');
@@ -11,6 +12,14 @@ const { normalizeNumber, normalizeString } = require('../utils/validation');
 const router = express.Router();
 
 router.use(requireRole(Role.INSTRUCTOR));
+
+function parseBoolean(value, fallback = false) {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+
+  return ['true', '1', 'yes', 'on'].includes(String(value).trim().toLowerCase());
+}
 
 router.post('/apply', asyncHandler(async (req, res) => {
   const bio = normalizeString(req.body.bio, { field: 'bio', max: 1000 }) || null;
@@ -161,7 +170,88 @@ router.post('/courses/:courseId/sections', asyncHandler(async (req, res) => {
   res.status(201).json(section);
 }));
 
-router.post('/sections/:sectionId/lessons', asyncHandler(async (req, res) => {
+router.delete('/courses/:courseId', asyncHandler(async (req, res) => {
+  const course = await prisma.course.findFirst({
+    where: {
+      id: req.params.courseId,
+      instructorId: req.user.id
+    },
+    include: {
+      sections: {
+        include: {
+          lessons: {
+            select: {
+              id: true,
+              videoUrl: true
+            }
+          }
+        }
+      },
+      _count: {
+        select: {
+          enrollments: true,
+          reviews: true,
+          orderItems: true
+        }
+      }
+    }
+  });
+
+  if (!course) {
+    return res.status(404).json({ error: 'Course not found' });
+  }
+
+  if (course._count.enrollments > 0 || course._count.orderItems > 0 || course._count.reviews > 0) {
+    return res.status(409).json({
+      error: 'This course already has student activity or purchase history, so it cannot be deleted.'
+    });
+  }
+
+  const lessonIds = course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.id));
+  const uploadUrls = Array.from(
+    new Set([
+      course.introVideoUrl,
+      ...course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.videoUrl))
+    ].filter(Boolean))
+  );
+
+  await prisma.$transaction(async (tx) => {
+    if (lessonIds.length > 0) {
+      await tx.lessonProgress.deleteMany({
+        where: {
+          lessonId: {
+            in: lessonIds
+          }
+        }
+      });
+    }
+
+    await tx.review.deleteMany({
+      where: { courseId: course.id }
+    });
+
+    await tx.enrollment.deleteMany({
+      where: { courseId: course.id }
+    });
+
+    await tx.orderItem.deleteMany({
+      where: { courseId: course.id }
+    });
+
+    await tx.course.delete({
+      where: { id: course.id }
+    });
+  });
+
+  await Promise.all(uploadUrls.map((fileUrl) => removeStoredUploadByUrl(fileUrl)));
+
+  res.json({
+    deleted: true,
+    courseId: course.id
+  });
+}));
+
+router.post('/sections/:sectionId/lessons', uploadVideo.single('video'), asyncHandler(async (req, res) => {
   const section = await prisma.courseSection.findUnique({
     where: { id: req.params.sectionId },
     include: {
@@ -171,23 +261,36 @@ router.post('/sections/:sectionId/lessons', asyncHandler(async (req, res) => {
   });
 
   if (!section || section.course.instructorId !== req.user.id) {
+    await removeUploadedFile(req.file);
     return res.status(404).json({ error: 'Section not found' });
   }
 
-  const lesson = await prisma.lesson.create({
-    data: {
-      sectionId: section.id,
-      title: normalizeString(req.body.title, { field: 'title', required: true, min: 2, max: 160 }),
-      videoProvider: normalizeString(req.body.videoProvider, { field: 'videoProvider', max: 80 }) || null,
-      videoUrl: normalizeString(req.body.videoUrl, { field: 'videoUrl', required: true, min: 8, max: 2000 }),
-      thumbnailUrl: normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null,
-      durationSeconds: normalizeNumber(req.body.durationSeconds, { field: 'durationSeconds', min: 0, integer: true }) || 0,
-      isPreview: req.body.isPreview === true,
-      sortOrder: normalizeNumber(req.body.sortOrder, { field: 'sortOrder', min: 1, integer: true }) || section.lessons.length + 1
-    }
-  });
+  const title = normalizeString(req.body.title, { field: 'title', required: true, min: 2, max: 160 });
+  const videoUrl = req.file
+    ? buildVideoUrl(req.file)
+    : normalizeString(req.body.videoUrl, { field: 'videoUrl', required: true, min: 8, max: 2000 });
 
-  res.status(201).json(lesson);
+  try {
+    const lesson = await prisma.lesson.create({
+      data: {
+        sectionId: section.id,
+        title,
+        videoProvider: req.file
+          ? 'UPLOAD'
+          : normalizeString(req.body.videoProvider, { field: 'videoProvider', max: 80 }) || null,
+        videoUrl,
+        thumbnailUrl: normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null,
+        durationSeconds: normalizeNumber(req.body.durationSeconds, { field: 'durationSeconds', min: 0, integer: true }) || 0,
+        isPreview: parseBoolean(req.body.isPreview, false),
+        sortOrder: normalizeNumber(req.body.sortOrder, { field: 'sortOrder', min: 1, integer: true }) || section.lessons.length + 1
+      }
+    });
+
+    res.status(201).json(lesson);
+  } catch (error) {
+    await removeUploadedFile(req.file);
+    throw error;
+  }
 }));
 
 router.post('/courses/:courseId/submit', asyncHandler(async (req, res) => {
