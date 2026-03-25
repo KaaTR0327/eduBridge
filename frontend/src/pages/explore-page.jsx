@@ -1,5 +1,6 @@
 import { SlidersHorizontal, X } from 'lucide-react';
 import { startTransition, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { FilterSidebar } from '../components/filter-sidebar';
 import { ResourceCard } from '../components/resource-card';
 import { SearchBar } from '../components/search-bar';
@@ -10,9 +11,10 @@ const tags = ['React', 'Design', 'Mongolian', 'English', 'Beginner', 'Intermedia
 
 export function ExplorePage() {
   const { locale } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [resources, setResources] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState(searchParams.get('q') || '');
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedPriceFilters, setSelectedPriceFilters] = useState([]);
@@ -23,6 +25,10 @@ export function ExplorePage() {
   const [error, setError] = useState('');
 
   const deferredSearch = useDeferredValue(searchValue.trim().toLowerCase());
+
+  useEffect(() => {
+    setSearchValue(searchParams.get('q') || '');
+  }, [searchParams]);
 
   useEffect(() => {
     let active = true;
@@ -54,23 +60,23 @@ export function ExplorePage() {
 
   const copy = locale === 'mn'
     ? {
-        eyebrow: 'Нөөц судлах',
-        title: 'Хэрэгтэй дижитал нөөц, бүтээгчийн контент, сургалтын материалыг олоорой',
-        description: 'EduBridge нь бүтээгч, ангилал, tag, preview ашиглан хэрэгтэй нөөцийг хурдан олоход тусална.',
+        eyebrow: 'Хичээл судлах',
+        title: 'Хэрэгтэй дижитал хичээл, бүтээгчийн контент, сургалтын материалыг олоорой',
+        description: 'EduBridge нь бүтээгч, ангилал, tag, preview ашиглан хэрэгтэй хичээлийг хурдан олоход тусална.',
         searchPlaceholder: 'Гарчиг, бүтээгч, ангилал, хэл эсвэл түвшнээр хайх',
         filters: 'Шүүлтүүр',
         close: 'Хаах',
-        resourcesAvailable: 'нөөц байна',
-        noResultsTitle: 'Тохирох нөөц олдсонгүй',
+        resourcesAvailable: 'хичээл байна',
+        noResultsTitle: 'Тохирох хичээл олдсонгүй',
         noResultsBody: 'Хайлтын үг эсвэл шүүлтүүрээ өөрчлөөд дахин шалгана уу.',
-        loadError: 'Нөөц ачаалж чадсангүй.',
-        loading: 'Нөөцүүдийг ачаалж байна...',
+        loadError: 'Хичээл ачаалж чадсангүй.',
+        loading: 'Хичээлүүдийг ачаалж байна...',
         clearAll: 'Бүгдийг цэвэрлэх',
         priceLabels: {
           free: 'Зөвхөн үнэгүй',
           paid: 'Зөвхөн төлбөртэй',
-          'under-20': '$20-аас доош',
-          '20-plus': '$20 ба түүнээс дээш'
+          'under-20000': '20000-аас доош',
+          '20000-plus': '20000 ба түүнээс дээш'
         },
         sorts: {
           newest: 'Шинэ',
@@ -97,8 +103,8 @@ export function ExplorePage() {
         priceLabels: {
           free: 'Free only',
           paid: 'Paid only',
-          'under-20': 'Under $20',
-          '20-plus': '$20 and above'
+          'under-20000': 'Under 20000',
+          '20000-plus': '20000 and above'
         },
         sorts: {
           newest: 'Newest',
@@ -191,6 +197,23 @@ export function ExplorePage() {
       setSearchValue('');
       setSortBy('newest');
     });
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('q');
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const handleSearchChange = (event) => {
+    const nextValue = event.target.value;
+    setSearchValue(nextValue);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextValue.trim()) {
+      nextParams.set('q', nextValue);
+    } else {
+      nextParams.delete('q');
+    }
+    setSearchParams(nextParams, { replace: true });
   };
 
   const filterSidebar = (
@@ -209,7 +232,7 @@ export function ExplorePage() {
 
   return (
     <main className="page-shell px-4 py-10 sm:px-6 lg:px-8">
-      <div className="surface-panel mesh-accent p-8">
+      <div className="surface-panel mesh-accent p-5 sm:p-8">
         <p className="eyebrow-text">{copy.eyebrow}</p>
         <h1 className="page-title mt-3 text-white">{copy.title}</h1>
         <p className="body-copy mt-4">{copy.description}</p>
@@ -218,7 +241,7 @@ export function ExplorePage() {
       <div className="mt-8">
         <SearchBar
           value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
+          onChange={handleSearchChange}
           placeholder={copy.searchPlaceholder}
           label={copy.eyebrow}
         />
@@ -242,11 +265,11 @@ export function ExplorePage() {
         })}
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[260px,1fr]">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[260px,1fr] lg:gap-8">
         <div className="hidden lg:block">{filterSidebar}</div>
 
         <div>
-          <div className="surface-panel flex flex-col gap-4 p-4">
+          <div className="surface-panel flex flex-col gap-4 p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
@@ -312,7 +335,7 @@ export function ExplorePage() {
 
       {mobileFiltersOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 px-4 py-6 lg:hidden">
-          <div className="mx-auto max-w-md rounded-md border border-white/10 bg-[#232844] p-4 shadow-soft-premium">
+          <div className="mx-auto max-h-[calc(100vh-3rem)] max-w-md overflow-y-auto rounded-md border border-white/10 bg-[#232844] p-4 shadow-soft-premium">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#f9b17a]">{copy.filters}</p>
               <button type="button" onClick={() => setMobileFiltersOpen(false)} className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/10 text-slate-200">

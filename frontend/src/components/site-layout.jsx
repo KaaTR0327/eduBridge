@@ -1,6 +1,7 @@
-import { Heart, LogOut, Menu, Search, Upload, X } from 'lucide-react';
+import { LogOut, Menu, Search, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Footer } from './Footer';
 import { useAuth } from '../lib/auth';
 import { useLanguage } from '../lib/i18n';
 
@@ -77,13 +78,13 @@ export function SiteLayout({ children }) {
   return (
     <div className="min-h-screen bg-transparent text-slate-900">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#2d3250]/82 backdrop-blur">
-        <div className="page-shell flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
-            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/[0.03]">
-              <EduBridgeMark className="h-11 w-11 text-[#dfe8f1]" />
+        <div className="page-shell flex items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-3 md:flex-none" onClick={() => setMobileMenuOpen(false)}>
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md bg-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] ring-1 ring-white/20">
+              <EduBridgeMark className="h-11 w-11" />
             </div>
-            <div className="min-w-[172px]">
-              <p className="text-base font-extrabold tracking-[0.06em] text-white">EDUBRIDGE</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-extrabold tracking-[0.06em] text-white sm:text-base">EDUBRIDGE</p>
               <p className="hidden text-xs text-slate-300 lg:block">{copy.tagline}</p>
             </div>
           </Link>
@@ -96,16 +97,12 @@ export function SiteLayout({ children }) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <LanguageToggle locale={locale} setLocale={setLocale} compact />
 
             <Link to="/explore" aria-label={copy.search} className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:border-[#f9b17a] hover:text-[#f9b17a]">
               <Search className="h-4 w-4" />
             </Link>
-
-            <button type="button" aria-label={copy.favorites} className="hidden h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-slate-300 transition hover:border-[#f9b17a] hover:text-[#f9b17a] sm:inline-flex">
-              <Heart className="h-4 w-4" />
-            </button>
 
             <Link to="/upload" className="hidden h-10 min-w-[124px] items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-[#f9b17a] hover:text-[#f9b17a] sm:inline-flex">
               <Upload className="h-4 w-4" />
@@ -198,38 +195,21 @@ export function SiteLayout({ children }) {
 
       {children}
 
-      <footer className="mt-16 border-t border-white/10 bg-[#232844] text-white">
-        <div className="page-shell grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr,0.8fr,0.8fr,0.8fr] lg:px-8">
-          <div className="max-w-sm">
-            <p className="text-sm font-semibold text-[#f9b17a]">EduBridge</p>
-            <p className="mt-3 text-sm leading-6 text-slate-300">{copy.footerText}</p>
-          </div>
-          <FooterList title={copy.product} items={copy.productItems} />
-          <FooterList title={copy.categories} items={copy.categoryItems} />
-          <FooterList title={copy.company} items={copy.companyItems} />
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
 
 function EduBridgeMark({ className }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
-      <path d="M12 41L28 46L32 54L18 49L12 41Z" fill="currentColor" />
-      <path d="M52 41L36 46L32 54L46 49L52 41Z" fill="currentColor" />
-      <path d="M15 35L29 39L32 43L20 41L15 35Z" fill="currentColor" opacity="0.95" />
-      <path d="M49 35L35 39L32 43L44 41L49 35Z" fill="currentColor" opacity="0.95" />
-      <path d="M18 29L30 33L32 36L22 34L18 29Z" fill="currentColor" opacity="0.9" />
-      <path d="M46 29L34 33L32 36L42 34L46 29Z" fill="currentColor" opacity="0.9" />
-      <path d="M30 12H34V27H30V12Z" fill="currentColor" />
-      <path d="M27 8H37V13H27V8Z" fill="currentColor" />
-      <path d="M28 27H36V31H28V27Z" fill="currentColor" />
-      <path d="M24 12L15 30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M40 12L49 30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M24 31L32 40L40 31" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M26 22H38" stroke="currentColor" strokeWidth="2" />
-      <path d="M26 26H38" stroke="currentColor" strokeWidth="2" />
+    <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <rect width="72" height="72" rx="10" fill="white" />
+      <g stroke="#2B4FAE" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M34 22H22C14.82 22 9 27.82 9 35C9 42.18 14.82 48 22 48H36" />
+        <path d="M12 35H36" />
+        <path d="M44 13V48" />
+        <path d="M44 35H53C59.63 35 65 40.37 65 47C65 53.63 59.63 59 53 59H44" />
+      </g>
     </svg>
   );
 }
@@ -259,13 +239,3 @@ function LanguageToggle({ locale, setLocale, compact = false }) {
   );
 }
 
-function FooterList({ title, items }) {
-  return (
-    <div>
-      <p className="text-sm font-semibold text-[#f9b17a]">{title}</p>
-      <ul className="mt-4 space-y-3 text-sm text-slate-300">
-        {items.map((item) => <li key={item}>{item}</li>)}
-      </ul>
-    </div>
-  );
-}

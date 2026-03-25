@@ -6,6 +6,7 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const { buildVideoUrl, removeUploadedFile, uploadVideo } = require('../middleware/upload');
 const { mapFrontendResource, pickFrontendCourseInclude } = require('../utils/frontendMapper');
 const { slugify } = require('../utils/slugify');
+const { normalizeString } = require('../utils/validation');
 
 const router = express.Router();
 
@@ -18,6 +19,53 @@ async function createUniqueCourseSlug(title) {
   }
 
   return `${baseSlug}-${Date.now()}`;
+}
+
+async function createUniqueCategorySlug(name) {
+  const baseSlug = slugify(name) || `category-${Date.now()}`;
+  let slug = baseSlug;
+  let suffix = 1;
+
+  while (await prisma.category.findUnique({ where: { slug } })) {
+    slug = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  return slug;
+}
+
+async function resolveCategory({ categoryId, categoryName }) {
+  if (categoryId) {
+    return prisma.category.findUnique({ where: { id: categoryId } });
+  }
+
+  if (!categoryName) {
+    return null;
+  }
+
+  const existingCategories = await prisma.category.findMany({
+    select: {
+      id: true,
+      name: true,
+      slug: true
+    }
+  });
+
+  const normalizedName = categoryName.toLowerCase();
+  const existingCategory = existingCategories.find(
+    (item) => item.name.trim().toLowerCase() === normalizedName
+  );
+
+  if (existingCategory) {
+    return existingCategory;
+  }
+
+  return prisma.category.create({
+    data: {
+      name: categoryName,
+      slug: await createUniqueCategorySlug(categoryName)
+    }
+  });
 }
 
 function parseBoolean(value, fallback = false) {
@@ -70,6 +118,7 @@ router.post(
 
     const {
       categoryId,
+      categoryName,
       title,
       shortDescription,
       description,
@@ -83,15 +132,26 @@ router.post(
       isPreview
     } = req.body;
 
-    if (!categoryId || !title || !description || price === undefined) {
+    const normalizedCategoryId = normalizeString(categoryId, { field: 'categoryId' });
+    const normalizedCategoryName = normalizeString(categoryName, {
+      field: 'categoryName',
+      min: 2,
+      max: 60
+    });
+
+    if ((!normalizedCategoryId && !normalizedCategoryName) || !title || !description || price === undefined) {
       await removeUploadedFile(req.file);
-      return res.status(400).json({ error: 'categoryId, title, description, and price are required' });
+      return res.status(400).json({ error: 'categoryId or categoryName, title, description, and price are required' });
     }
 
-    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    const category = await resolveCategory({
+      categoryId: normalizedCategoryId,
+      categoryName: normalizedCategoryName
+    });
+
     if (!category) {
       await removeUploadedFile(req.file);
-      return res.status(400).json({ error: 'Invalid categoryId' });
+      return res.status(400).json({ error: 'Invalid category' });
     }
 
     const normalizedPrice = Number(price);
@@ -115,7 +175,7 @@ router.post(
       const resource = await prisma.course.create({
         data: {
           instructorId: req.user.id,
-          categoryId,
+          categoryId: category.id,
           title: normalizedTitle,
           slug: await createUniqueCourseSlug(normalizedTitle),
           shortDescription: normalizedShortDescription,

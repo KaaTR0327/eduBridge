@@ -109,34 +109,34 @@
   }
 
   .page-title {
-    @apply text-3xl font-semibold tracking-tight sm:text-4xl lg:text-[2.9rem];
+    @apply text-2xl font-semibold tracking-tight sm:text-4xl lg:text-[2.9rem];
   }
 
   .hero-title {
-    @apply text-4xl font-semibold tracking-tight sm:text-5xl lg:text-[4.25rem] lg:leading-[1.02];
+    @apply text-[2.5rem] font-semibold tracking-tight leading-[1.04] sm:text-5xl lg:text-[4.25rem] lg:leading-[1.02];
   }
 
   .section-title {
-    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+    @apply text-xl font-semibold tracking-tight sm:text-3xl;
   }
 
   .card-title {
-    @apply text-xl font-semibold tracking-tight;
+    @apply text-lg font-semibold tracking-tight sm:text-xl;
   }
 
   .stat-number {
-    @apply text-3xl font-semibold tracking-tight tabular-nums;
+    @apply text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl;
     font-variant-numeric: lining-nums tabular-nums;
     line-height: 1;
     letter-spacing: -0.02em;
   }
 
   .body-copy {
-    @apply text-base leading-7 text-slate-200 sm:text-lg;
+    @apply text-sm leading-6 text-slate-200 sm:text-lg sm:leading-7;
   }
 
   .meta-copy {
-    @apply text-sm leading-7 text-slate-200 sm:text-base;
+    @apply text-sm leading-6 text-slate-200 sm:text-base sm:leading-7;
   }
 
   .hero-panel {
@@ -162,7 +162,7 @@
   }
 
   .media-tilt {
-    transform: perspective(1400px) rotateX(8deg) rotateY(-11deg);
+    transform: none;
     transform-style: preserve-3d;
   }
 
@@ -190,7 +190,9 @@
 
   .hero-immersive {
     position: relative;
-    min-height: 47rem;
+    min-height: 18rem;
+    overflow: hidden;
+    width: 100%;
     background:
       radial-gradient(circle at 20% 18%, rgba(249, 177, 122, 0.08), transparent 18%),
       radial-gradient(circle at 82% 22%, rgba(103, 111, 157, 0.22), transparent 20%),
@@ -217,8 +219,8 @@
   .hero-scene-glow {
     position: absolute;
     inset: auto auto 18% -6%;
-    width: 16rem;
-    height: 16rem;
+    width: 10rem;
+    height: 10rem;
     border-radius: 9999px;
     background: rgba(255, 255, 255, 0.04);
     filter: blur(58px);
@@ -229,8 +231,8 @@
     position: absolute;
     left: 50%;
     top: 18%;
-    width: 28rem;
-    height: 28rem;
+    width: 16rem;
+    height: 16rem;
     border-radius: 9999px;
     transform: translateX(-50%);
     background: radial-gradient(circle, rgba(255, 255, 255, 0.1), rgba(126, 172, 181, 0.04) 36%, transparent 68%);
@@ -240,9 +242,9 @@
 
   .hero-model-canvas {
     position: absolute;
-    inset: -2.5rem -2rem -2.5rem -2rem;
+    inset: 0;
     z-index: 2;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .hero-model-canvas canvas {
@@ -260,7 +262,7 @@
   }
 
   .empty-state {
-    @apply rounded-md border border-dashed border-white/15 bg-white/5 p-8 text-center text-slate-200;
+    @apply rounded-md border border-dashed border-white/15 bg-white/5 p-5 text-center text-slate-200 sm:p-8;
   }
 
   .status-chip {
@@ -308,5 +310,49 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .hero-immersive {
+    min-height: 36rem;
+  }
+
+  .hero-scene-glow {
+    width: 13rem;
+    height: 13rem;
+  }
+
+  .hero-spotlight {
+    width: 22rem;
+    height: 22rem;
+  }
+
+  .hero-model-canvas {
+    inset: -1.75rem -1rem -1.75rem -1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .media-tilt {
+    transform: perspective(1400px) rotateX(8deg) rotateY(-11deg);
+  }
+
+  .hero-immersive {
+    min-height: 47rem;
+  }
+
+  .hero-scene-glow {
+    width: 16rem;
+    height: 16rem;
+  }
+
+  .hero-spotlight {
+    width: 28rem;
+    height: 28rem;
+  }
+
+  .hero-model-canvas {
+    inset: -2.5rem -2rem -2.5rem -2rem;
   }
 }

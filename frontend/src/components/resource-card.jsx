@@ -26,7 +26,7 @@ export function ResourceCard({ resource }) {
           )}
         </div>
 
-        <div className="space-y-4 p-5">
+        <div className="space-y-4 p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3 text-xs font-medium uppercase tracking-wide text-slate-300">
             <span>{getTypeLabel(resource.type, locale)}</span>
             <span className={resource.isFree ? 'text-[#f9b17a]' : 'text-white'}>
@@ -35,7 +35,7 @@ export function ResourceCard({ resource }) {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold tracking-tight text-white transition group-hover:text-[#f9b17a]">
+            <h3 className="text-lg font-semibold tracking-tight text-white transition group-hover:text-[#f9b17a] sm:text-xl">
               {getLocalizedField(resource, 'title', locale)}
             </h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -51,13 +51,13 @@ export function ResourceCard({ resource }) {
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4 text-sm text-slate-300">
-            <div>
+          <div className="flex flex-col gap-3 border-t border-white/10 pt-4 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <p className="font-medium text-white">{resource.creator?.name || (locale === 'mn' ? 'EduBridge бүтээгч' : 'EduBridge Creator')}</p>
               <p>{formatResourceFileType(resource, locale)}</p>
             </div>
 
-            <div className="space-y-1 text-right">
+            <div className="space-y-1 self-start sm:text-right">
               <div className="flex items-center justify-end gap-1">
                 <Star className="h-4 w-4 fill-[#f9b17a] text-[#f9b17a]" />
                 <span className="tabular-nums">{resource.rating || 0}</span>

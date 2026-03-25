@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { apiRequest } from '../lib/api';
-import { fetchCategories } from '../lib/content';
+import { fetchCategories, getCategoryLabel } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function UploadPage() {
@@ -18,6 +18,8 @@ export function UploadPage() {
   const [busy, setBusy] = useState(false);
   const [videoFile, setVideoFile] = useState(null);
   const [isPreview, setIsPreview] = useState(true);
+  const [categoryMode, setCategoryMode] = useState('existing');
+  const [customCategoryName, setCustomCategoryName] = useState('');
 
   const copy = useMemo(
     () =>
@@ -139,6 +141,29 @@ export function UploadPage() {
     [locale]
   );
 
+  const categoryUiCopy =
+    locale === 'mn'
+      ? {
+          existing: 'Байгаа ангилал',
+          custom: 'Шинэ ангилал',
+          placeholder: 'Жишээ нь: Маркетинг, 3D дизайн',
+          noCategories:
+            'Одоогоор ангилал байхгүй байна. Эхний ангиллаа өөрөө үүсгээд үргэлжлүүлээрэй.',
+          customHint:
+            'Шинээр нэмсэн ангилал энэ курсийн хамт хадгалагдаж, дараа нь бусад хэрэглэгчид ч ашиглах боломжтой болно.',
+          missing: 'Ангиллаа сонгох эсвэл шинэ нэр оруулна уу.'
+        }
+      : {
+          existing: 'Use existing',
+          custom: 'Create new',
+          placeholder: 'For example: Marketing, 3D design',
+          noCategories:
+            'There are no categories yet. Create the first one and continue.',
+          customHint:
+            'A new category will be saved with this course and available to other users as well.',
+          missing: 'Select a category or enter a new category name.'
+        };
+
   useEffect(() => {
     let active = true;
 
@@ -149,6 +174,7 @@ export function UploadPage() {
 
         if (active) {
           setCategories(categoryData);
+          setCategoryMode(categoryData.length ? 'existing' : 'custom');
         }
       } catch (loadError) {
         if (active) {
@@ -170,13 +196,19 @@ export function UploadPage() {
 
   async function onSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
+
+    if (categoryMode === 'custom' && !customCategoryName.trim()) {
+      setStatus({ type: 'error', message: categoryUiCopy.missing });
+      return;
+    }
 
     if (!videoFile) {
       setStatus({ type: 'error', message: copy.selectVideo });
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const normalizedPrice =
       pricing === 'free' ? 0 : Number(formData.get('price') || 0);
 
@@ -216,10 +248,12 @@ export function UploadPage() {
       });
 
       setStatus({ type: 'success', message: copy.success });
-      event.currentTarget.reset();
+      form.reset();
       setVideoFile(null);
       setPricing('free');
       setIsPreview(true);
+      setCustomCategoryName('');
+      setCategoryMode(categories.length ? 'existing' : 'custom');
 
       if (resource?.slug) {
         navigate(`/resources/${resource.slug}`);
@@ -245,16 +279,6 @@ export function UploadPage() {
         <div className="empty-state">
           <h1 className="page-title text-white">{copy.categoryLoadFailed}</h1>
           <p className="mt-4 text-slate-300">{categoryError}</p>
-        </div>
-      </main>
-    );
-  }
-
-  if (!categories.length) {
-    return (
-      <main className="page-shell max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="empty-state">
-          <h1 className="page-title text-white">{copy.emptyCategories}</h1>
         </div>
       </main>
     );
@@ -304,17 +328,17 @@ export function UploadPage() {
 
   return (
     <main className="page-shell max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="surface-panel mesh-accent max-w-4xl p-8">
+      <div className="surface-panel mesh-accent max-w-4xl p-5 sm:p-8">
         <p className="eyebrow-text">{copy.eyebrow}</p>
         <h1 className="page-title mt-3 text-white">{copy.title}</h1>
         <p className="body-copy mt-4">{copy.body}</p>
       </div>
 
       <form className="mt-10 space-y-8" onSubmit={onSubmit}>
-        <section className="surface-panel grid gap-6 p-8 lg:grid-cols-2">
+        <section className="surface-panel grid gap-6 p-5 sm:p-8 md:grid-cols-2">
           <SectionHeading
             title={copy.courseInfo}
-            className="lg:col-span-2"
+            className="md:col-span-2"
           />
 
           <Field label={copy.titleField}>
@@ -328,17 +352,66 @@ export function UploadPage() {
           </Field>
 
           <Field label={copy.category}>
-            <select
-              name="categoryId"
-              className="select-base"
-              defaultValue={categories[0]?.id}
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setCategoryMode('existing')}
+                  disabled={!categories.length}
+                  className={`rounded-md border px-4 py-3 text-sm font-medium transition ${
+                    categoryMode === 'existing'
+                      ? 'border-[#f9b17a] bg-[#f9b17a]/12 text-[#f9b17a]'
+                      : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
+                  } ${!categories.length ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  {categoryUiCopy.existing}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryMode('custom')}
+                  className={`rounded-md border px-4 py-3 text-sm font-medium transition ${
+                    categoryMode === 'custom'
+                      ? 'border-[#f9b17a] bg-[#f9b17a]/12 text-[#f9b17a]'
+                      : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
+                  }`}
+                >
+                  {categoryUiCopy.custom}
+                </button>
+              </div>
+
+              {categoryMode === 'existing' && categories.length ? (
+                <select
+                  name="categoryId"
+                  className="select-base"
+                  defaultValue={categories[0]?.id}
+                  required
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {getCategoryLabel(category.name, locale)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name="categoryName"
+                  type="text"
+                  value={customCategoryName}
+                  onChange={(event) => setCustomCategoryName(event.target.value)}
+                  placeholder={categoryUiCopy.placeholder}
+                  className="input-base"
+                  required
+                />
+              )}
+
+              <p className="text-xs leading-6 text-slate-300">
+                {!categories.length
+                  ? categoryUiCopy.noCategories
+                  : categoryMode === 'custom'
+                    ? categoryUiCopy.customHint
+                    : ''}
+              </p>
+            </div>
           </Field>
 
           <Field label={copy.lessonTitle}>
@@ -359,7 +432,7 @@ export function UploadPage() {
             />
           </Field>
 
-          <Field label={copy.description} className="lg:col-span-2">
+          <Field label={copy.description} className="md:col-span-2">
             <textarea
               name="description"
               rows="6"
@@ -405,7 +478,7 @@ export function UploadPage() {
           </Field>
         </section>
 
-        <section className="surface-panel grid gap-6 p-8 lg:grid-cols-[1.2fr,0.8fr]">
+        <section className="surface-panel grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.2fr,0.8fr]">
           <SectionHeading
             title={copy.mediaInfo}
             className="lg:col-span-2"
@@ -447,10 +520,10 @@ export function UploadPage() {
           </label>
         </section>
 
-        <section className="surface-panel grid gap-6 p-8 lg:grid-cols-[1fr,1fr]">
+        <section className="surface-panel grid gap-6 p-5 sm:p-8 md:grid-cols-2">
           <SectionHeading
             title={copy.pricingInfo}
-            className="lg:col-span-2"
+            className="md:col-span-2"
           />
 
           <Field label={copy.pricing}>
@@ -493,7 +566,7 @@ export function UploadPage() {
           <button
             type="submit"
             disabled={busy}
-            className="rounded-md bg-[#f9b17a] px-5 py-3 text-sm font-medium text-[#2d3250] transition hover:bg-[#f6a56b] disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-md bg-[#f9b17a] px-5 py-3 text-sm font-medium text-[#2d3250] transition hover:bg-[#f6a56b] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
           >
             {busy ? copy.loading : copy.publish}
           </button>

@@ -23,7 +23,12 @@ async function main() {
   const [webCategory, designCategory, dataCategory] = await Promise.all([
     prisma.category.create({ data: { name: 'Web Development', slug: 'web-development' } }),
     prisma.category.create({ data: { name: 'Design', slug: 'design' } }),
-    prisma.category.create({ data: { name: 'Data', slug: 'data' } })
+    prisma.category.create({ data: { name: 'Data', slug: 'data' } }),
+    prisma.category.create({ data: { name: 'English Language', slug: 'english-language' } }),
+    prisma.category.create({ data: { name: 'Mongolian Language', slug: 'mongolian-language' } }),
+    prisma.category.create({ data: { name: 'Mathematics', slug: 'mathematics' } }),
+    prisma.category.create({ data: { name: 'Finance', slug: 'finance' } }),
+    prisma.category.create({ data: { name: 'Forex', slug: 'forex' } })
   ]);
 
   const admin = await prisma.user.create({

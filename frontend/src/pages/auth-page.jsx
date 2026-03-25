@@ -136,9 +136,9 @@ export function AuthPage() {
               {copy.body}
             </p>
 
-            <div className="mt-8 rounded-[24px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
-              <div className="relative flex min-h-[320px] items-center justify-center lg:min-h-[380px]">
-                <div className="relative h-[260px] w-full max-w-[360px] lg:h-[320px] lg:max-w-[420px]">
+            <div className="mt-8 rounded-[24px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur sm:p-6">
+              <div className="relative flex min-h-[240px] items-center justify-center sm:min-h-[320px] lg:min-h-[380px]">
+                <div className="relative h-[220px] w-full max-w-[320px] sm:h-[260px] sm:max-w-[360px] lg:h-[320px] lg:max-w-[420px]">
                   <HeroModelViewer />
                 </div>
               </div>
@@ -148,16 +148,16 @@ export function AuthPage() {
 
         <div className="flex items-center px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
           <div className="w-full">
-            <div className="mb-8 inline-flex rounded-full border border-white/10 bg-[#232844]/80 p-1">
+            <div className="mb-8 flex w-full rounded-full border border-white/10 bg-[#232844]/80 p-1 sm:inline-flex sm:w-auto">
               <Link
                 to="/auth#signin"
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${mode === 'signin' ? 'bg-[#f9b17a] text-[#232844]' : 'text-slate-300 hover:text-white'}`}
+                className={`flex-1 rounded-full px-4 py-2 text-center text-sm font-medium transition sm:flex-none ${mode === 'signin' ? 'bg-[#f9b17a] text-[#232844]' : 'text-slate-300 hover:text-white'}`}
               >
                 {copy.signIn}
               </Link>
               <Link
                 to="/auth#signup"
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${mode === 'signup' ? 'bg-[#f9b17a] text-[#232844]' : 'text-slate-300 hover:text-white'}`}
+                className={`flex-1 rounded-full px-4 py-2 text-center text-sm font-medium transition sm:flex-none ${mode === 'signup' ? 'bg-[#f9b17a] text-[#232844]' : 'text-slate-300 hover:text-white'}`}
               >
                 {copy.signUp}
               </Link>
@@ -178,7 +178,7 @@ export function AuthPage() {
                   <input name="password" type="password" className="input-base rounded-xl border-white/10 bg-white/[0.04]" placeholder={copy.password} required minLength={6} />
                 </Field>
 
-                <div className="flex items-center justify-between gap-4 text-sm text-slate-300">
+                <div className="flex flex-col items-start gap-3 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <label className="inline-flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4 rounded border-white/20 bg-transparent text-[#f9b17a] focus:ring-[#f9b17a]" />
                     <span>{copy.remember}</span>

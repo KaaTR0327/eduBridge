@@ -281,7 +281,7 @@ export function ResourceDetailPage() {
 
   return (
     <main className="page-shell px-4 py-10 sm:px-6 lg:px-8">
-      <div className="surface-panel mesh-accent mb-8 p-8">
+      <div className="surface-panel mesh-accent mb-8 p-5 sm:p-8">
         <p className="eyebrow-text">{copy.pageLabel}</p>
         <h1 className="page-title mt-3 text-white">
           {getLocalizedField(resource, 'title', locale)}
@@ -298,22 +298,22 @@ export function ResourceDetailPage() {
                 preload="metadata"
                 poster={resource.cover || undefined}
                 src={resource.previewVideoUrl}
-                className="h-full max-h-[420px] w-full bg-[#11162b] object-cover"
+                className="h-full max-h-[240px] w-full bg-[#11162b] object-cover sm:max-h-[420px]"
               />
             ) : resource.cover ? (
               <img
                 src={resource.cover}
                 alt={getLocalizedField(resource, 'title', locale)}
-                className="h-full max-h-[420px] w-full object-cover"
+                className="h-full max-h-[240px] w-full object-cover sm:max-h-[420px]"
               />
             ) : (
-              <div className="flex h-[320px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(249,177,122,0.22),_transparent_45%),linear-gradient(135deg,_rgba(66,71,105,1),_rgba(35,40,68,1))] px-6 text-center text-sm text-slate-200">
+              <div className="flex h-[220px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(249,177,122,0.22),_transparent_45%),linear-gradient(135deg,_rgba(66,71,105,1),_rgba(35,40,68,1))] px-6 text-center text-sm text-slate-200 sm:h-[320px]">
                 {getLocalizedField(resource, 'title', locale)}
               </div>
             )}
           </div>
 
-          <div className="surface-panel p-8">
+          <div className="surface-panel p-5 sm:p-8">
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <span className="font-medium text-[#f9b17a]">
                 {getCategoryLabel(resource.category, locale)}
@@ -360,7 +360,7 @@ export function ResourceDetailPage() {
             </div>
           </div>
 
-          <div className="surface-panel p-8">
+          <div className="surface-panel p-5 sm:p-8">
             <h2 className="card-title text-white">{copy.preview}</h2>
             {resource.previewVideoUrl ? (
               <p className="meta-copy mt-4">
@@ -371,8 +371,8 @@ export function ResourceDetailPage() {
             )}
           </div>
 
-          <div className="surface-panel p-8">
-            <div className="flex items-center justify-between gap-4">
+          <div className="surface-panel p-5 sm:p-8">
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <h2 className="card-title text-white">{copy.courseContent}</h2>
               <p className="text-sm text-slate-300">
                 {resource.lessonCount} {copy.lessons.toLowerCase()}
@@ -386,11 +386,11 @@ export function ResourceDetailPage() {
                     key={section.id}
                     className="rounded-md border border-white/10 p-4"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                       <p className="text-sm font-medium text-white">
                         {section.title}
                       </p>
-                      <span className="text-xs uppercase tracking-[0.28em] text-slate-400">
+                      <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 sm:text-xs sm:tracking-[0.28em]">
                         {section.lessons.length}{' '}
                         {copy.lessons.toLowerCase()}
                       </span>
@@ -400,7 +400,7 @@ export function ResourceDetailPage() {
                       {section.lessons.map((lesson, index) => (
                         <div
                           key={lesson.id}
-                          className="flex items-center justify-between gap-4 rounded-md bg-white/5 px-4 py-3"
+                          className="flex flex-col items-start gap-3 rounded-md bg-white/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                         >
                           <div>
                             <p className="text-sm font-medium text-white">
@@ -432,7 +432,7 @@ export function ResourceDetailPage() {
         </div>
 
         <aside className="space-y-6">
-          <div className="surface-panel p-6">
+          <div className="surface-panel p-5 sm:p-6">
             <p className="text-sm font-medium text-slate-300">
               {copy.creator}
             </p>
@@ -452,7 +452,7 @@ export function ResourceDetailPage() {
             ) : null}
 
             <div className="mt-6 border-t border-white/10 pt-6">
-              <div className="flex items-end justify-between gap-4">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                 <div>
                   <p className="text-sm text-slate-300">{copy.price}</p>
                   <p className="stat-number mt-1 text-white">
@@ -512,7 +512,7 @@ export function ResourceDetailPage() {
           </div>
 
           {isOwner ? (
-            <div className="surface-panel p-6">
+            <div className="surface-panel p-5 sm:p-6">
               <p className="text-sm font-medium text-slate-300">
                 {copy.ownerTools}
               </p>
@@ -527,7 +527,7 @@ export function ResourceDetailPage() {
             </div>
           ) : null}
 
-          <div className="surface-panel p-6">
+          <div className="surface-panel p-5 sm:p-6">
             <h2 className="card-title text-white">{copy.reviews}</h2>
             <div className="mt-5 space-y-4">
               {resource.reviews.length > 0 ? (
@@ -561,7 +561,7 @@ export function ResourceDetailPage() {
       </div>
 
       <section className="mt-16">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="eyebrow-text">{copy.related}</p>
             <h2 className="section-title mt-2 text-white">

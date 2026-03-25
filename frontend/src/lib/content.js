@@ -3,7 +3,8 @@ import { apiRequest } from './api';
 export const categoryLabels = {
   'Web Development': { mn: 'Вэб хөгжүүлэлт', en: 'Web Development' },
   Design: { mn: 'Дизайн', en: 'Design' },
-  Data: { mn: 'Өгөгдөл', en: 'Data' }
+  Data: { mn: 'Өгөгдөл', en: 'Data' },
+  Math : { mn: 'Математик', en: 'Math' },
 };
 
 export const typeLabels = {
@@ -44,6 +45,22 @@ export const howItWorksSteps = [
 
 export const fallbackHowItWorks = howItWorksSteps;
 
+const extraCategoryLabels = {
+  'English Language': { mn: 'Англи хэл', en: 'English Language' },
+  'Mongolian Language': { mn: 'Монгол хэл', en: 'Mongolian Language' },
+  Mathematics: { mn: 'Математик', en: 'Mathematics' },
+  Finance: { mn: 'Санхүүгийн хичээл', en: 'Finance' },
+  Forex: { mn: 'Forex', en: 'Forex' }
+};
+
+const preferredCategoryOrder = [
+  'English Language',
+  'Mongolian Language',
+  'Mathematics',
+  'Finance',
+  'Forex'
+];
+
 export function getLocalizedField(item, key, locale) {
   if (locale === 'mn' && item?.[`${key}Mn`]) {
     return item[`${key}Mn`];
@@ -52,7 +69,7 @@ export function getLocalizedField(item, key, locale) {
 }
 
 export function getCategoryLabel(category, locale) {
-  const mapped = categoryLabels[category];
+  const mapped = categoryLabels[category] || extraCategoryLabels[category];
   return mapped ? mapped[locale] : category;
 }
 
@@ -131,11 +148,30 @@ function normalizeResource(resource) {
 
 export async function fetchCategories() {
   const categories = await apiRequest('/public/categories');
-  return categories.map((item) => ({
-    id: item.id,
-    name: item.name,
-    slug: item.slug
-  }));
+  return categories
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      slug: item.slug
+    }))
+    .sort((left, right) => {
+      const leftIndex = preferredCategoryOrder.indexOf(left.name);
+      const rightIndex = preferredCategoryOrder.indexOf(right.name);
+
+      if (leftIndex !== -1 && rightIndex !== -1) {
+        return leftIndex - rightIndex;
+      }
+
+      if (leftIndex !== -1) {
+        return -1;
+      }
+
+      if (rightIndex !== -1) {
+        return 1;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
 }
 
 export async function fetchResources() {

@@ -90,23 +90,23 @@ export function CreatorProfilePage() {
 
   return (
     <main className="page-shell px-4 py-10 sm:px-6 lg:px-8">
-      <div className="surface-panel mesh-accent p-8">
-        <div className="grid gap-8 lg:grid-cols-[160px,1fr]">
-          <img src={creator.avatar} alt={creator.name} className="h-36 w-36 rounded-md object-cover" />
+      <div className="surface-panel mesh-accent p-5 sm:p-8">
+        <div className="grid gap-6 sm:items-start lg:grid-cols-[160px,1fr] lg:gap-8">
+          <img src={creator.avatar} alt={creator.name} className="mx-auto h-28 w-28 rounded-md object-cover sm:h-36 sm:w-36 lg:mx-0" />
 
-          <div>
+          <div className="text-center lg:text-left">
             <p className="eyebrow-text">{copy.profile}</p>
             <h1 className="page-title mt-3 text-white">{creator.name}</h1>
             <p className="mt-2 text-sm font-medium text-slate-300">{getLocalizedField(creator, 'role', locale)}</p>
             <p className="meta-copy mt-5 max-w-3xl">{getLocalizedField(creator, 'bio', locale)}</p>
 
-            <div className="mt-6 flex flex-wrap gap-6 text-sm text-slate-200">
+            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm text-slate-200 lg:justify-start lg:gap-6">
               <span className="inline-flex items-center gap-2"><DownloadCount total={creator.totalDownloads} downloadsLabel={copy.downloads} /></span>
               <span className="inline-flex items-center gap-2"><Star className="h-4 w-4 fill-[#f9b17a] text-[#f9b17a]" /> <span className="stat-number text-white">{creator.rating}</span> {copy.rating}</span>
               <span><span className="stat-number text-white">{creator.reviewCount}</span> {copy.reviews}</span>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-4 text-sm">
+            <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm lg:justify-start">
               {creator.socials.website ? <SocialLink href={creator.socials.website} icon={Globe} label={creator.socials.website.replace('https://', '')} /> : null}
               {creator.socials.x ? <SocialLink href={creator.socials.x} icon={LinkIcon} label={creator.socials.x.replace('https://x.com/', '@')} /> : null}
               {creator.socials.linkedin ? <SocialLink href={creator.socials.linkedin} icon={LinkIcon} label={creator.socials.linkedin.replace('https://', '')} /> : null}
@@ -116,7 +116,7 @@ export function CreatorProfilePage() {
       </div>
 
       <section className="mt-12">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="eyebrow-text">{copy.storefront}</p>
             <h2 className="section-title mt-2 text-white">{copy.published}</h2>
