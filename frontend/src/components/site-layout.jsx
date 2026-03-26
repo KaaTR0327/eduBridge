@@ -1,4 +1,4 @@
-import { LogOut, Menu, Search, Upload, X } from 'lucide-react';
+import { LogOut, Menu, Search, Upload, User, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Footer } from './Footer';
@@ -19,6 +19,7 @@ export function SiteLayout({ children }) {
 
   const authMode = location.pathname === '/auth' && location.hash === '#signup' ? 'signup' : 'signin';
   const isAuthPage = location.pathname === '/auth';
+  const canUpload = user?.role === 'INSTRUCTOR';
 
   const copy = locale === 'mn'
     ? {
@@ -27,18 +28,10 @@ export function SiteLayout({ children }) {
         explore: 'Судлах',
         upload: 'Оруулах',
         admin: 'Админ',
-        creators: 'Бүтээгчид',
         signIn: 'Нэвтрэх',
         signUp: 'Бүртгүүлэх',
+        profile: 'Профайл',
         search: 'Хайх',
-        favorites: 'Хадгалсан',
-        footerText: 'Дижитал хичээл, мэдлэгийн бүтээгдэхүүн, файл нийтлэх, олох, ашиглахад зориулсан бүтэцтэй платформ.',
-        product: 'Платформ',
-        categories: 'Ангилал',
-        company: 'Тусламж',
-        productItems: ['Хичээл хайх', 'Файл оруулах', 'Бүтээгчийн хуудас', 'Хадгалсан зүйлс'],
-        categoryItems: ['Код', 'Загвар', 'UI/UX', 'Баримт'],
-        companyItems: ['Тухай', 'Тусламж', 'Нөхцөл', 'Нууцлал'],
         menu: 'Цэс',
         close: 'Хаах',
         logout: 'Гарах'
@@ -49,18 +42,10 @@ export function SiteLayout({ children }) {
         explore: 'Explore',
         upload: 'Upload',
         admin: 'Admin',
-        creators: 'Creators',
         signIn: 'Sign in',
         signUp: 'Sign up',
+        profile: 'Profile',
         search: 'Search',
-        favorites: 'Saved',
-        footerText: 'A structured platform for publishing, discovering, and using digital resources and knowledge products.',
-        product: 'Platform',
-        categories: 'Categories',
-        company: 'Support',
-        productItems: ['Explore resources', 'Upload files', 'Creator profiles', 'Saved items'],
-        categoryItems: ['Code', 'Templates', 'UI/UX', 'Documents'],
-        companyItems: ['About', 'Support', 'Terms', 'Privacy'],
         menu: 'Menu',
         close: 'Close',
         logout: 'Logout'
@@ -69,11 +54,9 @@ export function SiteLayout({ children }) {
   const navItems = [
     { to: '/', label: copy.home, end: true },
     { to: '/explore', label: copy.explore },
-    { to: '/upload', label: copy.upload }
+    ...(canUpload ? [{ to: '/upload', label: copy.upload }] : []),
+    ...(user?.role === 'ADMIN' ? [{ to: '/admin', label: copy.admin }] : [])
   ];
-  const visibleNavItems = user?.role === 'ADMIN'
-    ? [...navItems, { to: '/admin', label: copy.admin }]
-    : navItems;
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900">
@@ -90,7 +73,7 @@ export function SiteLayout({ children }) {
           </Link>
 
           <nav className="hidden items-center gap-4 text-sm md:flex">
-            {visibleNavItems.map((item) => (
+            {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `${navClassName({ isActive })} inline-flex min-w-[72px] justify-center`}>
                 {item.label}
               </NavLink>
@@ -104,16 +87,19 @@ export function SiteLayout({ children }) {
               <Search className="h-4 w-4" />
             </Link>
 
-            <Link to="/upload" className="hidden h-10 min-w-[124px] items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-[#f9b17a] hover:text-[#f9b17a] sm:inline-flex">
-              <Upload className="h-4 w-4" />
-              {copy.upload}
-            </Link>
+            {canUpload ? (
+              <Link to="/upload" className="hidden h-10 min-w-[124px] items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-[#f9b17a] hover:text-[#f9b17a] sm:inline-flex">
+                <Upload className="h-4 w-4" />
+                {copy.upload}
+              </Link>
+            ) : null}
 
             {isAuthenticated ? (
               <>
-                <span className="hidden rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 lg:inline-flex">
-                  {user?.fullName}
-                </span>
+                <Link to="/profile" className="hidden h-10 items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:border-[#f9b17a] hover:text-[#f9b17a] lg:inline-flex">
+                  <User className="h-4 w-4" />
+                  <span className="max-w-[168px] truncate">{user?.fullName || copy.profile}</span>
+                </Link>
                 <button type="button" onClick={logout} className="hidden h-10 min-w-[104px] items-center justify-center gap-2 rounded-md bg-[#f9b17a] px-4 py-2 text-sm font-medium text-[#2d3250] transition hover:bg-[#f6a56b] sm:inline-flex">
                   <LogOut className="h-4 w-4" />
                   {copy.logout}
@@ -150,7 +136,7 @@ export function SiteLayout({ children }) {
           <div className="border-t border-white/10 bg-[#232844]/95 px-4 py-4 md:hidden">
             <div className="page-shell space-y-4">
               <nav className="grid gap-2">
-                {visibleNavItems.map((item) => (
+                {navItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
@@ -161,17 +147,27 @@ export function SiteLayout({ children }) {
                     {item.label}
                   </NavLink>
                 ))}
+
                 {isAuthenticated ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="rounded-md bg-[#f9b17a] px-4 py-3 text-center text-sm font-medium text-[#2d3250]"
-                  >
-                    {copy.logout}
-                  </button>
+                  <>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white"
+                    >
+                      {copy.profile}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="rounded-md bg-[#f9b17a] px-4 py-3 text-center text-sm font-medium text-[#2d3250]"
+                    >
+                      {copy.logout}
+                    </button>
+                  </>
                 ) : (
                   <>
                     {!isAuthPage || authMode !== 'signin' ? (
@@ -238,4 +234,3 @@ function LanguageToggle({ locale, setLocale, compact = false }) {
     </div>
   );
 }
-

@@ -20,7 +20,16 @@ async function main() {
 
   const passwordHash = await bcrypt.hash('123456', 10);
 
-  const [webCategory, designCategory, dataCategory] = await Promise.all([
+  const [
+    webCategory,
+    designCategory,
+    dataCategory,
+    englishCategory,
+    mongolianCategory,
+    mathematicsCategory,
+    financeCategory,
+    forexCategory
+  ] = await Promise.all([
     prisma.category.create({ data: { name: 'Web Development', slug: 'web-development' } }),
     prisma.category.create({ data: { name: 'Design', slug: 'design' } }),
     prisma.category.create({ data: { name: 'Data', slug: 'data' } }),
@@ -212,6 +221,224 @@ async function main() {
     }
   });
 
+  const extraCourses = await Promise.all([
+    prisma.course.create({
+      data: {
+        instructorId: instructorOne.id,
+        categoryId: englishCategory.id,
+        title: 'Practical English for Job Interviews',
+        slug: 'practical-english-for-job-interviews',
+        shortDescription: 'Answer common interview questions with clear and natural English.',
+        description: 'Practice introductions, strengths, experience stories, and confident speaking for real interview situations.',
+        price: 0,
+        thumbnailUrl: 'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=900&q=80',
+        level: 'Beginner',
+        language: 'English',
+        status: CourseStatus.APPROVED,
+        publishedAt: new Date(),
+        sections: {
+          create: [
+            {
+              title: 'Interview Foundations',
+              sortOrder: 1,
+              lessons: {
+                create: [
+                  {
+                    title: 'Introduce yourself with confidence',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
+                    durationSeconds: 780,
+                    isPreview: true,
+                    sortOrder: 1
+                  },
+                  {
+                    title: 'Talk about your strengths',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/elephants.mp4',
+                    durationSeconds: 860,
+                    sortOrder: 2
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }),
+    prisma.course.create({
+      data: {
+        instructorId: instructorOne.id,
+        categoryId: mongolianCategory.id,
+        title: 'Mongol Helnii Zuv Bichig Starter',
+        slug: 'mongol-helnii-zuv-bichig-starter',
+        shortDescription: 'Zuv bichig, uguulber butets, temdegleliin suuriig oilgomjtoi uzne.',
+        description: 'Cover spelling rules, sentence structure, punctuation, and simple editing patterns for everyday writing.',
+        price: 0,
+        thumbnailUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=900&q=80',
+        level: 'Beginner',
+        language: 'Mongolian',
+        status: CourseStatus.APPROVED,
+        publishedAt: new Date(),
+        sections: {
+          create: [
+            {
+              title: 'Zuv bichgiin suuri',
+              sortOrder: 1,
+              lessons: {
+                create: [
+                  {
+                    title: 'Egshig, giiguulegch, bichlegiin aldaa',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
+                    durationSeconds: 720,
+                    isPreview: true,
+                    sortOrder: 1
+                  },
+                  {
+                    title: 'Temdegleliin zov hereglee',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/sea-turtle.mp4',
+                    durationSeconds: 810,
+                    sortOrder: 2
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }),
+    prisma.course.create({
+      data: {
+        instructorId: instructorTwo.id,
+        categoryId: mathematicsCategory.id,
+        title: 'Mathematics Fundamentals for Entrance Exams',
+        slug: 'mathematics-fundamentals-for-entrance-exams',
+        shortDescription: 'Algebra, functions, and equation solving in a structured beginner path.',
+        description: 'Review arithmetic, algebra, equations, graphs, and problem solving patterns useful for exam preparation.',
+        price: 39,
+        thumbnailUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=900&q=80',
+        level: 'Beginner',
+        language: 'Mongolian',
+        status: CourseStatus.APPROVED,
+        publishedAt: new Date(),
+        sections: {
+          create: [
+            {
+              title: 'Algebra basics',
+              sortOrder: 1,
+              lessons: {
+                create: [
+                  {
+                    title: 'Linear equations step by step',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/elephants.mp4',
+                    durationSeconds: 900,
+                    isPreview: true,
+                    sortOrder: 1
+                  },
+                  {
+                    title: 'Functions and graphs',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/cld-sample-video.mp4',
+                    durationSeconds: 1040,
+                    sortOrder: 2
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }),
+    prisma.course.create({
+      data: {
+        instructorId: instructorOne.id,
+        categoryId: financeCategory.id,
+        title: 'Personal Finance Basics for Students',
+        slug: 'personal-finance-basics-for-students',
+        shortDescription: 'Budgeting, saving, and money habits explained in a simple course.',
+        description: 'Learn how to build a budget, track spending, save consistently, and avoid common money mistakes.',
+        price: 29,
+        thumbnailUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=80',
+        level: 'Beginner',
+        language: 'Mongolian',
+        status: CourseStatus.APPROVED,
+        publishedAt: new Date(),
+        sections: {
+          create: [
+            {
+              title: 'Money habits',
+              sortOrder: 1,
+              lessons: {
+                create: [
+                  {
+                    title: 'Build a realistic monthly budget',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/dog.mp4',
+                    durationSeconds: 840,
+                    isPreview: true,
+                    sortOrder: 1
+                  },
+                  {
+                    title: 'Emergency fund and saving system',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/sea-turtle.mp4',
+                    durationSeconds: 920,
+                    sortOrder: 2
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }),
+    prisma.course.create({
+      data: {
+        instructorId: instructorTwo.id,
+        categoryId: forexCategory.id,
+        title: 'Forex Market Basics and Risk Control',
+        slug: 'forex-market-basics-and-risk-control',
+        shortDescription: 'Understand pairs, spreads, entries, and risk management before trading.',
+        description: 'This starter course explains market structure, lot sizes, stop loss discipline, and beginner risk control.',
+        price: 59,
+        thumbnailUrl: 'https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=900&q=80',
+        level: 'Intermediate',
+        language: 'English',
+        status: CourseStatus.APPROVED,
+        publishedAt: new Date(),
+        sections: {
+          create: [
+            {
+              title: 'Trading foundations',
+              sortOrder: 1,
+              lessons: {
+                create: [
+                  {
+                    title: 'Pairs, spreads, and position sizing',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/cld-sample-video.mp4',
+                    durationSeconds: 960,
+                    isPreview: true,
+                    sortOrder: 1
+                  },
+                  {
+                    title: 'Risk control before profit targets',
+                    videoProvider: 'Cloudinary',
+                    videoUrl: 'https://res.cloudinary.com/demo/video/upload/samples/elephants.mp4',
+                    durationSeconds: 1030,
+                    sortOrder: 2
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    })
+  ]);
+
   const orderOne = await prisma.order.create({
     data: {
       userId: studentOne.id,
@@ -273,7 +500,8 @@ async function main() {
     approvedCourse: courseOne.title,
     pendingCourse: courseTwo.title,
     extraCourse: courseThree.title,
-    dataCategory: dataCategory.slug
+    dataCategory: dataCategory.slug,
+    sampleCourses: extraCourses.map((course) => course.slug)
   });
 }
 

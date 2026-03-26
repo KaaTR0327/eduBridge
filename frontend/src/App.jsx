@@ -7,6 +7,7 @@ import { AdminDashboardPage } from './pages/admin-dashboard-page';
 import { CreatorProfilePage } from './pages/creator-profile-page';
 import { ExplorePage } from './pages/explore-page';
 import { HomePage } from './pages/home-page';
+import { ProfilePage } from './pages/profile-page';
 import { ResourceDetailPage } from './pages/resource-detail-page';
 import { UploadPage } from './pages/upload-page';
 
@@ -35,6 +36,7 @@ function AnimatedRoutes() {
         <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/resources/:slug" element={<ResourceDetailPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/creators/:slug" element={<CreatorProfilePage />} />

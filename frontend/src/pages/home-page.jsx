@@ -4,16 +4,19 @@ import { HeroModelViewer } from '../components/hero-model-viewer';
 import { ResourceCard } from '../components/resource-card';
 import { SearchBar } from '../components/search-bar';
 import { SectionHeading } from '../components/section-heading';
+import { useAuth } from '../lib/auth';
 import { fallbackHowItWorks, fetchCategories, fetchResources, getCategoryLabel, getLocalizedField } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { locale } = useLanguage();
+  const { user } = useAuth();
   const [resources, setResources] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heroSearch, setHeroSearch] = useState('');
+  const canUpload = user?.role === 'INSTRUCTOR';
 
   useEffect(() => {
     let active = true;
@@ -142,9 +145,11 @@ export function HomePage() {
               <Link to="/explore" className="inline-flex w-full items-center justify-center rounded-md bg-[#f9b17a] px-5 py-3 text-sm font-medium text-[#2d3250] transition hover:bg-[#f6a56b] sm:w-auto">
                 {copy.explore}
               </Link>
-              <Link to="/upload" className="inline-flex w-full items-center justify-center rounded-md border border-white/20 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/10 sm:w-auto">
-                {copy.upload}
-              </Link>
+              {canUpload ? (
+                <Link to="/upload" className="inline-flex w-full items-center justify-center rounded-md border border-white/20 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/10 sm:w-auto">
+                  {copy.upload}
+                </Link>
+              ) : null}
             </div>
           </div>
 
