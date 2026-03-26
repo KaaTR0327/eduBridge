@@ -3,7 +3,13 @@ const { CourseStatus, OrderStatus, PaymentStatus, Role } = require('@prisma/clie
 const prisma = require('../lib/prisma');
 const asyncHandler = require('../middleware/asyncHandler');
 const { authenticate, requireRole } = require('../middleware/auth');
-const { buildVideoUrl, removeUploadedFile, uploadVideo } = require('../middleware/upload');
+const {
+  buildImageUrl,
+  buildVideoUrl,
+  removeUploadedFile,
+  removeUploadedFiles,
+  uploadCourseAssets
+} = require('../middleware/upload');
 const { mapFrontendResource, pickFrontendCourseInclude } = require('../utils/frontendMapper');
 const { slugify } = require('../utils/slugify');
 const { normalizeString } = require('../utils/validation');
@@ -109,10 +115,16 @@ router.post(
   '/',
   authenticate,
   requireRole(Role.INSTRUCTOR),
-  uploadVideo.single('video'),
+  uploadCourseAssets.fields([
+    { name: 'video', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+  ]),
   asyncHandler(async (req, res) => {
+    const videoFile = req.files?.video?.[0] || null;
+    const thumbnailFile = req.files?.thumbnail?.[0] || null;
+
     if (!req.user.instructorProfile) {
-      await removeUploadedFile(req.file);
+      await removeUploadedFiles(req.files);
       return res.status(403).json({ error: 'Creator profile is required before publishing' });
     }
 
@@ -140,7 +152,7 @@ router.post(
     });
 
     if ((!normalizedCategoryId && !normalizedCategoryName) || !title || !description || price === undefined) {
-      await removeUploadedFile(req.file);
+      await removeUploadedFiles(req.files);
       return res.status(400).json({ error: 'categoryId or categoryName, title, description, and price are required' });
     }
 
@@ -150,25 +162,29 @@ router.post(
     });
 
     if (!category) {
-      await removeUploadedFile(req.file);
+      await removeUploadedFiles(req.files);
       return res.status(400).json({ error: 'Invalid category' });
     }
 
     const normalizedPrice = Number(price);
     if (!Number.isFinite(normalizedPrice) || normalizedPrice < 0) {
-      await removeUploadedFile(req.file);
+      await removeUploadedFiles(req.files);
       return res.status(400).json({ error: 'price must be a valid non-negative number' });
     }
 
     const normalizedTitle = String(title).trim();
     const normalizedShortDescription = shortDescription ? String(shortDescription).trim() : null;
     const normalizedDescription = String(description).trim();
-    const normalizedThumbnailUrl = thumbnailUrl ? String(thumbnailUrl).trim() : null;
+    const normalizedThumbnailUrl = thumbnailFile
+      ? buildImageUrl(thumbnailFile)
+      : thumbnailUrl
+        ? String(thumbnailUrl).trim()
+        : null;
     const normalizedLevel = level ? String(level).trim() : 'Beginner';
     const normalizedLanguage = language ? String(language).trim() : 'English';
-    const hasVideo = Boolean(req.file);
+    const hasVideo = Boolean(videoFile);
     const normalizedDurationSeconds = Number(durationSeconds || 0);
-    const storedVideoUrl = buildVideoUrl(req.file);
+    const storedVideoUrl = buildVideoUrl(videoFile);
     const previewEnabled = hasVideo && parseBoolean(isPreview, normalizedPrice === 0);
 
     try {
@@ -185,8 +201,8 @@ router.post(
           introVideoUrl: previewEnabled ? storedVideoUrl : null,
           level: normalizedLevel,
           language: normalizedLanguage,
-          status: CourseStatus.APPROVED,
-          publishedAt: new Date(),
+          status: CourseStatus.PENDING_REVIEW,
+          publishedAt: null,
           sections: hasVideo
             ? {
                 create: [
@@ -218,7 +234,7 @@ router.post(
 
       return res.status(201).json(mapFrontendResource(resource));
     } catch (error) {
-      await removeUploadedFile(req.file);
+      await removeUploadedFiles(req.files);
       throw error;
     }
   })

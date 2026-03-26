@@ -1,10 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, LayoutDashboard, Mail, ShieldCheck, Upload, UserCircle2 } from 'lucide-react';
-import { ResourceCard } from '../components/resource-card';
-import { fetchResourcesByCreator } from '../lib/content';
-import { slugify } from '../lib/api';
+import {
+  BookOpen,
+  Eye,
+  LayoutDashboard,
+  Mail,
+  Pencil,
+  ShieldCheck,
+  Upload,
+  UserCircle2
+} from 'lucide-react';
+import { apiRequest, slugify } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { getCategoryLabel } from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 function getInitials(name) {
@@ -36,6 +44,18 @@ function formatVerification(status, locale) {
   return labels[status]?.[locale] || status || '-';
 }
 
+function formatCourseStatus(status, locale) {
+  const labels = {
+    DRAFT: { mn: 'Ноорог', en: 'Draft' },
+    PENDING_REVIEW: { mn: 'Хянагдаж байна', en: 'Pending review' },
+    APPROVED: { mn: 'Нийтлэгдсэн', en: 'Published' },
+    REJECTED: { mn: 'Буцаагдсан', en: 'Rejected' },
+    ARCHIVED: { mn: 'Архивласан', en: 'Archived' }
+  };
+
+  return labels[status]?.[locale] || status || '-';
+}
+
 function formatDate(value, locale) {
   if (!value) {
     return '-';
@@ -50,9 +70,10 @@ function formatDate(value, locale) {
 
 export function ProfilePage() {
   const { locale } = useLanguage();
-  const { user, ready, isAuthenticated } = useAuth();
-  const [resources, setResources] = useState([]);
-  const [loadingResources, setLoadingResources] = useState(false);
+  const { user, token, ready, isAuthenticated } = useAuth();
+  const [teacherDashboard, setTeacherDashboard] = useState(null);
+  const [loadingTeacherData, setLoadingTeacherData] = useState(false);
+  const [teacherError, setTeacherError] = useState('');
 
   const isTeacher = user?.role === 'INSTRUCTOR' && Boolean(user?.instructorProfile);
 
@@ -76,14 +97,19 @@ export function ProfilePage() {
         dashboard: 'Админ самбар',
         explore: 'Хичээл үзэх',
         yourCourses: 'Миний нэмсэн хичээлүүд',
-        yourCoursesDesc: 'Таны өөрийн нэмсэн approved хичээлүүд энд харагдана.',
+        yourCoursesDesc: 'Таны оруулсан бүх хичээлүүд энд төлөвтэйгээ харагдана.',
         noCourses: 'Одоогоор нэмсэн хичээл алга.',
         noCoursesHint: 'Шинэ хичээл оруулмагц энд харагдана.',
         courseCount: 'Хичээл',
         totalLessons: 'Нийт lesson',
         downloads: 'Таталт',
-        freeCourses: 'Үнэгүй',
-        email: 'Имэйл'
+        revenue: 'Орлого',
+        email: 'Имэйл',
+        statusNote: 'Төлөв',
+        edit: 'Засах',
+        view: 'Үзэх',
+        rejectedReason: 'Буцаасан шалтгаан',
+        loadError: 'Багшийн хичээлүүдийг ачаалж чадсангүй.'
       }
     : {
         loading: 'Loading profile...',
@@ -104,55 +130,67 @@ export function ProfilePage() {
         dashboard: 'Admin dashboard',
         explore: 'Explore courses',
         yourCourses: 'My uploaded courses',
-        yourCoursesDesc: 'Your approved courses appear here.',
+        yourCoursesDesc: 'All of your uploaded courses are shown here with their status.',
         noCourses: 'No uploaded courses yet.',
         noCoursesHint: 'Once you upload a course, it will appear here.',
         courseCount: 'Courses',
         totalLessons: 'Lessons',
         downloads: 'Downloads',
-        freeCourses: 'Free',
-        email: 'Email'
+        revenue: 'Revenue',
+        email: 'Email',
+        statusNote: 'Status',
+        edit: 'Edit',
+        view: 'View',
+        rejectedReason: 'Rejected reason',
+        loadError: 'Unable to load teacher courses.'
       };
 
   useEffect(() => {
     let active = true;
 
-    async function loadResources() {
-      if (!ready || !isAuthenticated || !isTeacher || !user?.id) {
+    async function loadTeacherDashboard() {
+      if (!ready || !isAuthenticated || !isTeacher || !token) {
         if (active) {
-          setResources([]);
-          setLoadingResources(false);
+          setTeacherDashboard(null);
+          setLoadingTeacherData(false);
         }
         return;
       }
 
       try {
-        setLoadingResources(true);
-        const nextResources = await fetchResourcesByCreator(user.id);
+        setLoadingTeacherData(true);
+        setTeacherError('');
+        const nextDashboard = await apiRequest('/instructor/dashboard', { token });
+
         if (active) {
-          setResources(nextResources);
+          setTeacherDashboard(nextDashboard);
+        }
+      } catch (error) {
+        if (active) {
+          setTeacherError(error.message);
         }
       } finally {
         if (active) {
-          setLoadingResources(false);
+          setLoadingTeacherData(false);
         }
       }
     }
 
-    loadResources();
+    loadTeacherDashboard();
     return () => {
       active = false;
     };
-  }, [ready, isAuthenticated, isTeacher, user?.id]);
+  }, [ready, isAuthenticated, isTeacher, token]);
 
+  const teacherCourses = teacherDashboard?.courses || [];
   const publicTeacherHref = isTeacher ? `/creators/${slugify(user.fullName)}` : '';
 
   const stats = useMemo(() => ({
-    courseCount: resources.length,
-    totalLessons: resources.reduce((sum, item) => sum + (item.lessonCount || 0), 0),
-    downloads: resources.reduce((sum, item) => sum + (item.downloads || 0), 0),
-    freeCourses: resources.filter((item) => item.isFree).length
-  }), [resources]);
+    courseCount: teacherCourses.length,
+    totalLessons: teacherCourses.reduce((sum, item) => sum + (item.lessonCount || 0), 0),
+    downloads: teacherCourses.reduce((sum, item) => sum + (item.studentsCount || 0), 0),
+    revenue: teacherDashboard?.metrics?.totalRevenue || 0
+  }), [teacherCourses, teacherDashboard?.metrics?.totalRevenue]);
 
   if (!ready) {
     return (
@@ -289,16 +327,28 @@ export function ProfilePage() {
             <ProfileStatCard label={copy.courseCount} value={stats.courseCount} />
             <ProfileStatCard label={copy.totalLessons} value={stats.totalLessons} />
             <ProfileStatCard label={copy.downloads} value={stats.downloads} />
-            <ProfileStatCard label={copy.freeCourses} value={stats.freeCourses} />
+            <ProfileStatCard label={copy.revenue} value={`$${Number(stats.revenue || 0)}`} />
           </div>
 
-          {loadingResources ? (
+          {teacherError ? (
+            <div className="empty-state mt-8">
+              <h3 className="card-title text-white">{copy.loadError}</h3>
+              <p className="mt-3 text-slate-300">{teacherError}</p>
+            </div>
+          ) : loadingTeacherData ? (
             <div className="empty-state mt-8">
               <p className="text-slate-300">{copy.loading}</p>
             </div>
-          ) : resources.length ? (
+          ) : teacherCourses.length ? (
             <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {resources.map((resource) => <ResourceCard key={resource.id} resource={resource} />)}
+              {teacherCourses.map((course) => (
+                <TeacherCourseCard
+                  key={course.id}
+                  course={course}
+                  locale={locale}
+                  copy={copy}
+                />
+              ))}
             </div>
           ) : (
             <div className="surface-dark mt-8 rounded-md px-6 py-6 text-white">
@@ -318,5 +368,82 @@ function ProfileStatCard({ label, value }) {
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#f9b17a]">{label}</p>
       <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
     </div>
+  );
+}
+
+function TeacherCourseCard({ course, locale, copy }) {
+  const statusClassName = {
+    APPROVED: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100',
+    PENDING_REVIEW: 'border-amber-400/30 bg-amber-500/10 text-amber-100',
+    REJECTED: 'border-rose-400/30 bg-rose-500/10 text-rose-100',
+    DRAFT: 'border-slate-400/30 bg-slate-500/10 text-slate-100',
+    ARCHIVED: 'border-slate-400/30 bg-slate-500/10 text-slate-100'
+  }[course.status] || 'border-white/10 bg-white/5 text-slate-100';
+
+  return (
+    <article className="overflow-hidden rounded-md border border-white/10 bg-[#424769] text-white shadow-soft-premium">
+      <div className="aspect-[16/10] overflow-hidden bg-slate-900/40">
+        {course.thumbnailUrl ? (
+          <img
+            src={course.thumbnailUrl}
+            alt={course.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(249,177,122,0.26),_transparent_40%),linear-gradient(135deg,_rgba(66,71,105,1),_rgba(35,40,68,1))] px-4 text-center text-sm font-medium text-slate-100">
+            {course.title}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${statusClassName}`}>
+            {formatCourseStatus(course.status, locale)}
+          </span>
+          <span className="text-sm font-medium text-[#f9b17a]">
+            ${Number(course.price || 0)}
+          </span>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold text-white">{course.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
+            {course.shortDescription || course.description}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3 text-sm text-slate-200">
+          <span>{getCategoryLabel(course.category?.name || course.category, locale)}</span>
+          <span>{course.lessonCount || 0} lessons</span>
+        </div>
+
+        {course.rejectedReason ? (
+          <div className="rounded-md border border-rose-400/25 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+            {copy.rejectedReason}: {course.rejectedReason}
+          </div>
+        ) : null}
+
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to={`/courses/${course.id}/edit`}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#f9b17a] px-4 py-2 text-sm font-medium text-[#2d3250] transition hover:bg-[#f6a56b]"
+          >
+            <Pencil className="h-4 w-4" />
+            {copy.edit}
+          </Link>
+
+          {course.status === 'APPROVED' && course.slug ? (
+            <Link
+              to={`/resources/${course.slug}`}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-[#f9b17a] hover:text-[#f9b17a]"
+            >
+              <Eye className="h-4 w-4" />
+              {copy.view}
+            </Link>
+          ) : null}
+        </div>
+      </div>
+    </article>
   );
 }

@@ -4,6 +4,7 @@ import { AuthProvider } from './lib/auth';
 import { LanguageProvider, useLanguage } from './lib/i18n';
 import { AuthPage } from './pages/auth-page';
 import { AdminDashboardPage } from './pages/admin-dashboard-page';
+import { CourseEditPage } from './pages/course-edit-page';
 import { CreatorProfilePage } from './pages/creator-profile-page';
 import { ExplorePage } from './pages/explore-page';
 import { HomePage } from './pages/home-page';
@@ -37,6 +38,7 @@ function AnimatedRoutes() {
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/courses/:courseId/edit" element={<CourseEditPage />} />
         <Route path="/resources/:slug" element={<ResourceDetailPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/creators/:slug" element={<CreatorProfilePage />} />

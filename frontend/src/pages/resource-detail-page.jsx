@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { ResourceCard } from '../components/resource-card';
 import { useAuth } from '../lib/auth';
 import { apiRequest } from '../lib/api';
-import { fetchResourceBySlug, fetchResources, getCategoryLabel, getLocalizedField } from '../lib/content';
+import {
+  fetchResourceBySlug,
+  fetchResources,
+  getCategoryLabel,
+  getLocalizedField
+} from '../lib/content';
 import { useLanguage } from '../lib/i18n';
 
 export function ResourceDetailPage() {
@@ -17,8 +22,14 @@ export function ResourceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
+  const [reviewStatus, setReviewStatus] = useState({ type: '', message: '' });
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 0,
+    comment: ''
+  });
 
   const copy = useMemo(
     () =>
@@ -32,10 +43,9 @@ export function ResourceDetailPage() {
               'Энд preview видео, хичээлийн тайлбар, бүлэг болон хичээлийн жагсаалтыг нэг дороос харна.',
             rating: 'Үнэлгээ',
             downloads: 'Таталт',
-            saved: 'Хадгалсан',
+            saved: 'Сэтгэгдэл',
             preview: 'Урьдчилж үзэх',
-            previewUnavailable:
-              'Энэ хичээлд нийтэд нээлттэй preview видео алга.',
+            previewUnavailable: 'Энэ хичээлд нийтэд нээлттэй preview видео алга.',
             creator: 'Бүтээгч',
             price: 'Үнэ',
             free: 'Үнэгүй',
@@ -50,8 +60,7 @@ export function ResourceDetailPage() {
             moreIn: 'Бусад',
             loading: 'Хичээлийг ачаалж байна...',
             enrollSuccess: 'Хичээл амжилттай нэмэгдлээ.',
-            saveHint:
-              'Хадгалах функц дараагийн алхамд backend-тэй холбогдоно.',
+            saveHint: 'Хадгалах функц дараагийн алхамд backend-тэй холбогдоно.',
             courseContent: 'Хичээлийн агуулга',
             noLessons: 'Одоогоор хичээлийн жагсаалт алга.',
             previewBadge: 'Preview',
@@ -65,19 +74,33 @@ export function ResourceDetailPage() {
             deleteSuccess: 'Хичээл устгагдлаа.',
             loadErrorTitle: 'Мэдээлэл ачаалж чадсангүй.',
             anonymousUser: 'EduBridge хэрэглэгч',
-            noWrittenReview: 'Бичсэн сэтгэгдэл алга.'
+            noWrittenReview: 'Бичсэн сэтгэгдэл алга.',
+            reviewTitle: 'Үнэлгээ өгөх',
+            reviewBody:
+              'Энэ хичээлийг үзсэн бол 1-5 одоор үнэлж, сэтгэгдлээ үлдээж болно.',
+            yourRating: 'Таны үнэлгээ',
+            reviewPlaceholder: 'Энэ хичээлээс юу сурсан эсвэл ямар санагдсан бэ?',
+            submitReview: 'Үнэлгээ хадгалах',
+            updatingReview: 'Хадгалж байна...',
+            reviewSuccess: 'Үнэлгээ амжилттай хадгалагдлаа.',
+            reviewLogin: 'Үнэлгээ өгөхийн тулд эхлээд нэвтэрнэ үү.',
+            reviewMissing: '1-5 одны хооронд үнэлгээ сонгоно уу.',
+            reviewAverage: 'Дундаж үнэлгээ',
+            reviewCountSuffix: 'үнэлгээ',
+            reviewRequirement:
+              'Үнэлгээ өгөхийн тулд эхлээд тухайн хичээлд хандах хэрэгтэй.',
+            ownerReviewBlocked: 'Өөрийн оруулсан хичээлийг өөрөө үнэлэх боломжгүй.'
           }
         : {
             notFound: 'Resource not found',
-            notFoundBody:
-              'The resource you are looking for is not available.',
+            notFoundBody: 'The resource you are looking for is not available.',
             backToExplore: 'Back to explore',
             pageLabel: 'Resource detail',
             pageBody:
               'See the preview video, course overview, section list, and lesson outline in one place.',
             rating: 'Rating',
             downloads: 'Downloads',
-            saved: 'Saved',
+            saved: 'Reviews',
             preview: 'Preview',
             previewUnavailable:
               'This course does not have a public preview video yet.',
@@ -95,8 +118,7 @@ export function ResourceDetailPage() {
             moreIn: 'More in',
             loading: 'Loading resource...',
             enrollSuccess: 'Resource added successfully.',
-            saveHint:
-              'The save feature will be connected to the backend next.',
+            saveHint: 'The save feature will be connected to the backend next.',
             courseContent: 'Course content',
             noLessons: 'No lessons have been added yet.',
             previewBadge: 'Preview',
@@ -110,7 +132,21 @@ export function ResourceDetailPage() {
             deleteSuccess: 'Course deleted.',
             loadErrorTitle: 'Unable to load data.',
             anonymousUser: 'EduBridge User',
-            noWrittenReview: 'No written review.'
+            noWrittenReview: 'No written review.',
+            reviewTitle: 'Leave a rating',
+            reviewBody:
+              'If you have gone through this course, you can rate it from 1 to 5 stars and leave a short comment.',
+            yourRating: 'Your rating',
+            reviewPlaceholder: 'What did you think about this course?',
+            submitReview: 'Save rating',
+            updatingReview: 'Saving...',
+            reviewSuccess: 'Your rating has been saved.',
+            reviewLogin: 'Please sign in before leaving a rating.',
+            reviewMissing: 'Choose a rating between 1 and 5 stars.',
+            reviewAverage: 'Average rating',
+            reviewCountSuffix: 'ratings',
+            reviewRequirement: 'You need course access before leaving a rating.',
+            ownerReviewBlocked: 'You cannot rate your own course.'
           },
     [locale]
   );
@@ -118,6 +154,19 @@ export function ResourceDetailPage() {
   const isOwner = Boolean(
     resource && isAuthenticated && user?.id && resource.creator?.id === user.id
   );
+
+  const existingReview = useMemo(
+    () =>
+      resource?.reviews?.find((review) => review.user?.id === user?.id) || null,
+    [resource?.reviews, user?.id]
+  );
+
+  useEffect(() => {
+    setReviewForm({
+      rating: existingReview?.rating || 0,
+      comment: existingReview?.comment || ''
+    });
+  }, [existingReview, resource?.id]);
 
   useEffect(() => {
     let active = true;
@@ -136,19 +185,13 @@ export function ResourceDetailPage() {
         }
 
         setResource(current);
-
-        if (current) {
-          setRelatedResources(
-            allResources
-              .filter(
-                (item) =>
-                  item.id !== current.id && item.category === current.category
-              )
-              .slice(0, 3)
-          );
-        } else {
-          setRelatedResources([]);
-        }
+        setRelatedResources(
+          allResources
+            .filter(
+              (item) => item.id !== current.id && item.category === current.category
+            )
+            .slice(0, 3)
+        );
       } catch (loadError) {
         if (!active) {
           return;
@@ -168,11 +211,19 @@ export function ResourceDetailPage() {
     }
 
     load();
-
     return () => {
       active = false;
     };
   }, [slug]);
+
+  async function refreshCurrentResource() {
+    if (!slug) {
+      return;
+    }
+
+    const nextResource = await fetchResourceBySlug(slug);
+    setResource(nextResource);
+  }
 
   async function handleAcquire() {
     if (!resource) {
@@ -210,10 +261,7 @@ export function ResourceDetailPage() {
       return;
     }
 
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm(copy.deleteConfirm)
-    ) {
+    if (typeof window !== 'undefined' && !window.confirm(copy.deleteConfirm)) {
       return;
     }
 
@@ -232,6 +280,51 @@ export function ResourceDetailPage() {
       setStatus({ type: 'error', message: requestError.message });
     } finally {
       setDeleteBusy(false);
+    }
+  }
+
+  async function handleReviewSubmit(event) {
+    event.preventDefault();
+
+    if (!resource) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate('/auth#signin');
+      return;
+    }
+
+    if (isOwner) {
+      setReviewStatus({ type: 'error', message: copy.ownerReviewBlocked });
+      return;
+    }
+
+    if (!reviewForm.rating || reviewForm.rating < 1 || reviewForm.rating > 5) {
+      setReviewStatus({ type: 'error', message: copy.reviewMissing });
+      return;
+    }
+
+    try {
+      setReviewBusy(true);
+      setReviewStatus({ type: '', message: '' });
+
+      await apiRequest('/student/reviews', {
+        method: 'POST',
+        token,
+        body: {
+          courseId: resource.id,
+          rating: reviewForm.rating,
+          comment: reviewForm.comment.trim()
+        }
+      });
+
+      await refreshCurrentResource();
+      setReviewStatus({ type: 'success', message: copy.reviewSuccess });
+    } catch (requestError) {
+      setReviewStatus({ type: 'error', message: requestError.message });
+    } finally {
+      setReviewBusy(false);
     }
   }
 
@@ -344,8 +437,9 @@ export function ResourceDetailPage() {
             <div className="mt-8 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-3">
               <MetaItem
                 label={copy.rating}
-                value={resource.rating}
+                value={`${Number(resource.rating || 0).toFixed(1)} / 5`}
                 icon={<Star className="h-4 w-4" />}
+                helper={`${resource.reviewsCount || 0} ${copy.reviewCountSuffix}`}
               />
               <MetaItem
                 label={copy.downloads}
@@ -354,7 +448,7 @@ export function ResourceDetailPage() {
               />
               <MetaItem
                 label={copy.saved}
-                value={(resource.favorites || 0).toLocaleString()}
+                value={(resource.reviewsCount || 0).toLocaleString()}
                 icon={<Heart className="h-4 w-4" />}
               />
             </div>
@@ -391,8 +485,7 @@ export function ResourceDetailPage() {
                         {section.title}
                       </p>
                       <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 sm:text-xs sm:tracking-[0.28em]">
-                        {section.lessons.length}{' '}
-                        {copy.lessons.toLowerCase()}
+                        {section.lessons.length} {copy.lessons.toLowerCase()}
                       </span>
                     </div>
 
@@ -407,8 +500,7 @@ export function ResourceDetailPage() {
                               {index + 1}. {lesson.title}
                             </p>
                             <p className="mt-1 text-xs text-slate-400">
-                              {copy.duration}:{' '}
-                              {formatDuration(lesson.durationSeconds)}
+                              {copy.duration}: {formatDuration(lesson.durationSeconds)}
                             </p>
                           </div>
 
@@ -433,9 +525,7 @@ export function ResourceDetailPage() {
 
         <aside className="space-y-6">
           <div className="surface-panel p-5 sm:p-6">
-            <p className="text-sm font-medium text-slate-300">
-              {copy.creator}
-            </p>
+            <p className="text-sm font-medium text-slate-300">{copy.creator}</p>
 
             {resource.creator ? (
               <>
@@ -488,9 +578,7 @@ export function ResourceDetailPage() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setStatus({ type: 'info', message: copy.saveHint })
-                  }
+                  onClick={() => setStatus({ type: 'info', message: copy.saveHint })}
                   className="w-full rounded-md border border-white/10 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-[#f9b17a] hover:text-[#f9b17a]"
                 >
                   {copy.saveForLater}
@@ -511,11 +599,102 @@ export function ResourceDetailPage() {
             </div>
           </div>
 
+          <div className="surface-panel p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="card-title text-white">{copy.reviewTitle}</h2>
+                <p className="meta-copy mt-3">{copy.reviewBody}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#f9b17a]">
+                  {copy.reviewAverage}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-white">
+                  {Number(resource.rating || 0).toFixed(1)}
+                </p>
+                <p className="mt-1 text-xs text-slate-300">
+                  {resource.reviewsCount || 0} {copy.reviewCountSuffix}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <StarSummary rating={resource.rating || 0} />
+            </div>
+
+            {isOwner ? (
+              <p className="mt-5 rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+                {copy.ownerReviewBlocked}
+              </p>
+            ) : (
+              <form className="mt-6" onSubmit={handleReviewSubmit}>
+                <label className="block">
+                  <span className="mb-3 block text-sm font-medium text-slate-200">
+                    {copy.yourRating}
+                  </span>
+                  <StarRatingInput
+                    value={reviewForm.rating}
+                    onChange={(rating) =>
+                      setReviewForm((current) => ({
+                        ...current,
+                        rating
+                      }))
+                    }
+                  />
+                </label>
+
+                <label className="mt-5 block">
+                  <span className="mb-2 block text-sm font-medium text-slate-200">
+                    {copy.reviews}
+                  </span>
+                  <textarea
+                    rows="4"
+                    value={reviewForm.comment}
+                    onChange={(event) =>
+                      setReviewForm((current) => ({
+                        ...current,
+                        comment: event.target.value
+                      }))
+                    }
+                    placeholder={copy.reviewPlaceholder}
+                    className="input-base"
+                  />
+                </label>
+
+                {reviewStatus.message ? (
+                  <p
+                    className={`mt-4 rounded-md px-4 py-3 text-sm ${
+                      reviewStatus.type === 'error'
+                        ? 'border border-rose-300/25 bg-rose-400/10 text-rose-100'
+                        : 'border border-[#f9b17a]/20 bg-[#f9b17a]/10 text-[#ffe0c5]'
+                    }`}
+                  >
+                    {reviewStatus.message}
+                  </p>
+                ) : null}
+
+                {!isAuthenticated ? (
+                  <p className="mt-4 text-sm text-slate-300">{copy.reviewLogin}</p>
+                ) : null}
+
+                <p className="mt-4 text-xs leading-6 text-slate-400">
+                  {copy.reviewRequirement}
+                </p>
+
+                <button
+                  type="submit"
+                  disabled={reviewBusy}
+                  className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-[#f9b17a] px-4 py-3 text-sm font-medium text-[#2d3250] transition hover:bg-[#f6a56b] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {reviewBusy ? copy.updatingReview : copy.submitReview}
+                </button>
+              </form>
+            )}
+          </div>
+
           {isOwner ? (
             <div className="surface-panel p-5 sm:p-6">
-              <p className="text-sm font-medium text-slate-300">
-                {copy.ownerTools}
-              </p>
+              <p className="text-sm font-medium text-slate-300">{copy.ownerTools}</p>
               <button
                 type="button"
                 onClick={handleDeleteCourse}
@@ -580,7 +759,7 @@ export function ResourceDetailPage() {
   );
 }
 
-function MetaItem({ label, value, icon }) {
+function MetaItem({ label, value, icon, helper = '' }) {
   return (
     <div className="rounded-md border border-white/10 p-4">
       <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -588,6 +767,51 @@ function MetaItem({ label, value, icon }) {
         <span>{label}</span>
       </div>
       <p className="stat-number mt-3 text-white">{value}</p>
+      {helper ? <p className="mt-2 text-xs text-slate-400">{helper}</p> : null}
+    </div>
+  );
+}
+
+function StarSummary({ rating }) {
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: 5 }).map((_, index) => {
+        const active = index < Math.round(rating);
+        return (
+          <Star
+            key={index}
+            className={`h-5 w-5 ${
+              active ? 'fill-[#f9b17a] text-[#f9b17a]' : 'text-slate-500'
+            }`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function StarRatingInput({ value, onChange }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {Array.from({ length: 5 }).map((_, index) => {
+        const rating = index + 1;
+        const active = rating <= value;
+
+        return (
+          <button
+            key={rating}
+            type="button"
+            onClick={() => onChange(rating)}
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-md border transition ${
+              active
+                ? 'border-[#f9b17a] bg-[#f9b17a]/12 text-[#f9b17a]'
+                : 'border-white/10 bg-white/5 text-slate-400 hover:border-[#f9b17a]/60 hover:text-[#f9b17a]'
+            }`}
+          >
+            <Star className={`h-5 w-5 ${active ? 'fill-current' : ''}`} />
+          </button>
+        );
+      })}
     </div>
   );
 }

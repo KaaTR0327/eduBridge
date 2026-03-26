@@ -3,7 +3,15 @@ const { Role, VerificationStatus, CourseStatus } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const asyncHandler = require('../middleware/asyncHandler');
 const { requireRole } = require('../middleware/auth');
-const { buildVideoUrl, removeStoredUploadByUrl, removeUploadedFile, uploadVideo } = require('../middleware/upload');
+const {
+  buildImageUrl,
+  buildVideoUrl,
+  removeStoredUploadByUrl,
+  removeUploadedFile,
+  removeUploadedFiles,
+  uploadCourseAssets,
+  uploadVideo
+} = require('../middleware/upload');
 const { slugify } = require('../utils/slugify');
 const { pickCourseInclude, mapCourse } = require('../utils/courseMapper');
 const { serializeUser } = require('../utils/serialize');
@@ -19,6 +27,17 @@ function parseBoolean(value, fallback = false) {
   }
 
   return ['true', '1', 'yes', 'on'].includes(String(value).trim().toLowerCase());
+}
+
+function collectCourseUploadUrls(course) {
+  return Array.from(
+    new Set([
+      course.thumbnailUrl,
+      course.introVideoUrl,
+      ...course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.videoUrl)),
+      ...course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.thumbnailUrl))
+    ].filter(Boolean))
+  );
 }
 
 router.post('/apply', asyncHandler(async (req, res) => {
@@ -112,38 +131,75 @@ router.post('/courses', asyncHandler(async (req, res) => {
   res.status(201).json(mapCourse(course));
 }));
 
-router.put('/courses/:courseId', asyncHandler(async (req, res) => {
+router.put('/courses/:courseId', uploadCourseAssets.fields([{ name: 'thumbnail', maxCount: 1 }]), asyncHandler(async (req, res) => {
   const existing = await prisma.course.findFirst({
     where: {
       id: req.params.courseId,
       instructorId: req.user.id
+    },
+    include: {
+      sections: {
+        include: {
+          lessons: true
+        }
+      }
     }
   });
 
   if (!existing) {
+    await removeUploadedFiles(req.files);
     return res.status(404).json({ error: 'Course not found' });
   }
 
-  const updated = await prisma.course.update({
-    where: { id: existing.id },
-    data: {
-      categoryId: req.body.categoryId || existing.categoryId,
-      title: req.body.title ? normalizeString(req.body.title, { field: 'title', min: 3, max: 160 }) : existing.title,
-      slug: req.body.title ? `${slugify(normalizeString(req.body.title, { field: 'title', min: 3, max: 160 }))}-${existing.id.slice(-6)}` : existing.slug,
-      description: req.body.description ? normalizeString(req.body.description, { field: 'description', min: 20, max: 5000 }) : existing.description,
-      shortDescription: req.body.shortDescription !== undefined ? (normalizeString(req.body.shortDescription, { field: 'shortDescription', max: 240 }) || null) : existing.shortDescription,
-      price: req.body.price !== undefined ? normalizeNumber(req.body.price, { field: 'price', min: 0 }) : existing.price,
-      thumbnailUrl: req.body.thumbnailUrl !== undefined ? (normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null) : existing.thumbnailUrl,
-      introVideoUrl: req.body.introVideoUrl !== undefined ? (normalizeString(req.body.introVideoUrl, { field: 'introVideoUrl', max: 2000 }) || null) : existing.introVideoUrl,
-      level: req.body.level !== undefined ? (normalizeString(req.body.level, { field: 'level', max: 60 }) || null) : existing.level,
-      language: req.body.language !== undefined ? (normalizeString(req.body.language, { field: 'language', max: 60 }) || null) : existing.language,
-      status: existing.status === CourseStatus.REJECTED ? CourseStatus.DRAFT : existing.status,
-      rejectedReason: null
-    },
-    include: pickCourseInclude()
-  });
+  const thumbnailFile = req.files?.thumbnail?.[0] || null;
+  const nextTitle = req.body.title
+    ? normalizeString(req.body.title, { field: 'title', min: 3, max: 160 })
+    : existing.title;
+  const nextThumbnailUrl = thumbnailFile
+    ? buildImageUrl(thumbnailFile)
+    : req.body.thumbnailUrl !== undefined
+      ? (normalizeString(req.body.thumbnailUrl, { field: 'thumbnailUrl', max: 2000 }) || null)
+      : existing.thumbnailUrl;
 
-  res.json(mapCourse(updated));
+  try {
+    const updated = await prisma.course.update({
+      where: { id: existing.id },
+      data: {
+        categoryId: req.body.categoryId || existing.categoryId,
+        title: nextTitle,
+        slug: req.body.title ? `${slugify(nextTitle)}-${existing.id.slice(-6)}` : existing.slug,
+        description: req.body.description
+          ? normalizeString(req.body.description, { field: 'description', min: 20, max: 5000 })
+          : existing.description,
+        shortDescription: req.body.shortDescription !== undefined
+          ? (normalizeString(req.body.shortDescription, { field: 'shortDescription', max: 240 }) || null)
+          : existing.shortDescription,
+        thumbnailUrl: nextThumbnailUrl,
+        introVideoUrl: req.body.introVideoUrl !== undefined
+          ? (normalizeString(req.body.introVideoUrl, { field: 'introVideoUrl', max: 2000 }) || null)
+          : existing.introVideoUrl,
+        level: req.body.level !== undefined
+          ? (normalizeString(req.body.level, { field: 'level', max: 60 }) || null)
+          : existing.level,
+        language: req.body.language !== undefined
+          ? (normalizeString(req.body.language, { field: 'language', max: 60 }) || null)
+          : existing.language,
+        status: CourseStatus.PENDING_REVIEW,
+        publishedAt: null,
+        rejectedReason: null
+      },
+      include: pickCourseInclude()
+    });
+
+    if (thumbnailFile && existing.thumbnailUrl && existing.thumbnailUrl !== nextThumbnailUrl) {
+      await removeStoredUploadByUrl(existing.thumbnailUrl);
+    }
+
+    res.json(mapCourse(updated));
+  } catch (error) {
+    await removeUploadedFiles(req.files);
+    throw error;
+  }
 }));
 
 router.post('/courses/:courseId/sections', asyncHandler(async (req, res) => {
@@ -182,7 +238,8 @@ router.delete('/courses/:courseId', asyncHandler(async (req, res) => {
           lessons: {
             select: {
               id: true,
-              videoUrl: true
+              videoUrl: true,
+              thumbnailUrl: true
             }
           }
         }
@@ -208,12 +265,7 @@ router.delete('/courses/:courseId', asyncHandler(async (req, res) => {
   }
 
   const lessonIds = course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.id));
-  const uploadUrls = Array.from(
-    new Set([
-      course.introVideoUrl,
-      ...course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.videoUrl))
-    ].filter(Boolean))
-  );
+  const uploadUrls = collectCourseUploadUrls(course);
 
   await prisma.$transaction(async (tx) => {
     if (lessonIds.length > 0) {
@@ -249,6 +301,22 @@ router.delete('/courses/:courseId', asyncHandler(async (req, res) => {
     deleted: true,
     courseId: course.id
   });
+}));
+
+router.get('/courses/:courseId', asyncHandler(async (req, res) => {
+  const course = await prisma.course.findFirst({
+    where: {
+      id: req.params.courseId,
+      instructorId: req.user.id
+    },
+    include: pickCourseInclude()
+  });
+
+  if (!course) {
+    return res.status(404).json({ error: 'Course not found' });
+  }
+
+  res.json(mapCourse(course));
 }));
 
 router.post('/sections/:sectionId/lessons', uploadVideo.single('video'), asyncHandler(async (req, res) => {

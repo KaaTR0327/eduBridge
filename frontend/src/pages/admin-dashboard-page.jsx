@@ -4,7 +4,9 @@ import {
   Clock3,
   DollarSign,
   RefreshCw,
+  Save,
   ShieldCheck,
+  Trash2,
   Users,
   XCircle
 } from 'lucide-react';
@@ -18,8 +20,10 @@ export function AdminDashboardPage() {
   const { locale } = useLanguage();
   const { token, user, ready, isAuthenticated } = useAuth();
   const [dashboard, setDashboard] = useState(null);
+  const [allCourses, setAllCourses] = useState([]);
   const [pendingCourses, setPendingCourses] = useState([]);
   const [pendingInstructors, setPendingInstructors] = useState([]);
+  const [priceDrafts, setPriceDrafts] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -144,6 +148,28 @@ export function AdminDashboardPage() {
         loadError: 'Unable to load admin data.'
       }), [locale]);
 
+  const courseManagementCopy = locale === 'mn'
+    ? {
+        savePrice: 'Үнэ хадгалах',
+        deleteCourse: 'Хичээл устгах',
+        allCoursesTitle: 'Бүх хичээлийн удирдлага',
+        allCoursesBody: 'Админ эндээс үнийг өөрчилж, course-ийг устгаж болно.',
+        emptyAllCourses: 'Одоогоор курс алга.',
+        savePriceSuccess: 'Хичээлийн үнэ шинэчлэгдлээ.',
+        deleteCourseSuccess: 'Хичээл устгагдлаа.',
+        deleteCoursePrompt: 'Энэ хичээлийг устгах уу?'
+      }
+    : {
+        savePrice: 'Save price',
+        deleteCourse: 'Delete course',
+        allCoursesTitle: 'All course management',
+        allCoursesBody: 'Admins can update course pricing and delete courses from here.',
+        emptyAllCourses: 'No courses available yet.',
+        savePriceSuccess: 'Course price updated.',
+        deleteCourseSuccess: 'Course deleted.',
+        deleteCoursePrompt: 'Delete this course?'
+      };
+
   useEffect(() => {
     if (!ready) {
       return undefined;
@@ -159,9 +185,10 @@ export function AdminDashboardPage() {
     async function loadAdminData() {
       try {
         setError('');
-        const [dashboardData, courseData, instructorData] = await Promise.all([
+        const [dashboardData, pendingCourseData, allCourseData, instructorData] = await Promise.all([
           apiRequest('/admin/dashboard', { token }),
           apiRequest('/admin/courses/pending', { token }),
+          apiRequest('/admin/courses', { token }),
           apiRequest('/admin/instructors/pending', { token })
         ]);
 
@@ -170,8 +197,14 @@ export function AdminDashboardPage() {
         }
 
         setDashboard(dashboardData);
-        setPendingCourses(courseData);
+        setPendingCourses(pendingCourseData);
+        setAllCourses(allCourseData);
         setPendingInstructors(instructorData);
+        setPriceDrafts(
+          Object.fromEntries(
+            allCourseData.map((course) => [course.id, String(course.price ?? 0)])
+          )
+        );
       } catch (loadError) {
         if (active) {
           setError(loadError.message);
@@ -200,14 +233,21 @@ export function AdminDashboardPage() {
     try {
       setRefreshing(true);
       setError('');
-      const [dashboardData, courseData, instructorData] = await Promise.all([
+      const [dashboardData, pendingCourseData, allCourseData, instructorData] = await Promise.all([
         apiRequest('/admin/dashboard', { token }),
         apiRequest('/admin/courses/pending', { token }),
+        apiRequest('/admin/courses', { token }),
         apiRequest('/admin/instructors/pending', { token })
       ]);
       setDashboard(dashboardData);
-      setPendingCourses(courseData);
+      setPendingCourses(pendingCourseData);
+      setAllCourses(allCourseData);
       setPendingInstructors(instructorData);
+      setPriceDrafts(
+        Object.fromEntries(
+          allCourseData.map((course) => [course.id, String(course.price ?? 0)])
+        )
+      );
     } catch (loadError) {
       setError(loadError.message);
     } finally {
@@ -229,13 +269,14 @@ export function AdminDashboardPage() {
     setStatus({ type: '', message: '' });
 
     try {
-      await apiRequest(`/admin/courses/${courseId}/${action}`, {
+      const updatedCourse = await apiRequest(`/admin/courses/${courseId}/${action}`, {
         method: 'POST',
         token,
         body: action === 'reject' && reason ? { reason } : undefined
       });
 
       setPendingCourses((current) => current.filter((item) => item.id !== courseId));
+      setAllCourses((current) => current.map((item) => (item.id === courseId ? updatedCourse : item)));
       setDashboard((current) => (current
         ? {
             ...current,
@@ -249,6 +290,77 @@ export function AdminDashboardPage() {
         type: 'success',
         message: action === 'approve' ? copy.approveCourseSuccess : copy.rejectCourseSuccess
       });
+    } catch (requestError) {
+      setStatus({ type: 'error', message: requestError.message });
+    } finally {
+      setActionKey('');
+    }
+  }
+
+  async function handleCoursePriceSave(courseId) {
+    const key = `course:${courseId}:price`;
+    setActionKey(key);
+    setStatus({ type: '', message: '' });
+
+    try {
+      const updatedCourse = await apiRequest(`/admin/courses/${courseId}`, {
+        method: 'PUT',
+        token,
+        body: {
+          price: Number(priceDrafts[courseId] || 0)
+        }
+      });
+
+      setAllCourses((current) => current.map((item) => (item.id === courseId ? updatedCourse : item)));
+      setPendingCourses((current) => current.map((item) => (item.id === courseId ? updatedCourse : item)));
+      setPriceDrafts((current) => ({
+        ...current,
+        [courseId]: String(updatedCourse.price ?? 0)
+      }));
+      setStatus({ type: 'success', message: courseManagementCopy.savePriceSuccess });
+    } catch (requestError) {
+      setStatus({ type: 'error', message: requestError.message });
+    } finally {
+      setActionKey('');
+    }
+  }
+
+  async function handleCourseDelete(courseId) {
+    if (typeof window !== 'undefined' && !window.confirm(courseManagementCopy.deleteCoursePrompt)) {
+      return;
+    }
+
+    const key = `course:${courseId}:delete`;
+    setActionKey(key);
+    setStatus({ type: '', message: '' });
+
+    try {
+      await apiRequest(`/admin/courses/${courseId}`, {
+        method: 'DELETE',
+        token
+      });
+
+      setAllCourses((current) => current.filter((item) => item.id !== courseId));
+      setPendingCourses((current) => current.filter((item) => item.id !== courseId));
+      setPriceDrafts((current) => {
+        const next = { ...current };
+        delete next[courseId];
+        return next;
+      });
+      setDashboard((current) => (current
+        ? {
+            ...current,
+            metrics: {
+              ...current.metrics,
+              totalCourses: Math.max(0, (current.metrics?.totalCourses || 0) - 1),
+              pendingCourses: Math.max(
+                0,
+                (current.metrics?.pendingCourses || 0) - (pendingCourses.some((item) => item.id === courseId) ? 1 : 0)
+              )
+            }
+          }
+        : current));
+      setStatus({ type: 'success', message: courseManagementCopy.deleteCourseSuccess });
     } catch (requestError) {
       setStatus({ type: 'error', message: requestError.message });
     } finally {
@@ -292,6 +404,13 @@ export function AdminDashboardPage() {
     } finally {
       setActionKey('');
     }
+  }
+
+  function handlePriceDraftChange(courseId, value) {
+    setPriceDrafts((current) => ({
+      ...current,
+      [courseId]: value
+    }));
   }
 
   if (!ready || loading) {
@@ -462,10 +581,72 @@ export function AdminDashboardPage() {
                         variant="reject"
                         label={copy.reject}
                       />
+                      <AdminActionButton
+                        busy={actionKey === `course:${course.id}:delete`}
+                        onClick={() => handleCourseDelete(course.id)}
+                        variant="delete"
+                        label={courseManagementCopy.deleteCourse}
+                      />
                     </div>
                   </div>
                 </div>
               )) : <EmptyList message={copy.emptyCourses} />}
+            </div>
+          </div>
+
+          <div className="surface-panel p-8">
+            <SectionHeader
+              title={courseManagementCopy.allCoursesTitle}
+              description={courseManagementCopy.allCoursesBody}
+              icon={BookOpen}
+            />
+            <div className="mt-6 space-y-4">
+              {allCourses.length > 0 ? allCourses.map((course) => (
+                <div key={course.id} className="rounded-md border border-white/10 bg-white/5 p-5">
+                  <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="space-y-2">
+                      <p className="text-lg font-semibold text-white">{course.title}</p>
+                      <p className="text-sm text-slate-300">{course.instructor?.fullName || 'Unknown instructor'}</p>
+                      <div className="flex flex-wrap gap-3 text-sm text-slate-200">
+                        <span>{course.category?.name || course.category}</span>
+                        <span>{course.lessonCount || 0} {copy.lessons}</span>
+                        <span>{copy.statusLabel}: {course.status}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex w-full max-w-xl flex-col gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={priceDrafts[course.id] ?? ''}
+                          onChange={(event) => handlePriceDraftChange(course.id, event.target.value)}
+                          className="input-base sm:max-w-[180px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleCoursePriceSave(course.id)}
+                          disabled={actionKey === `course:${course.id}:price`}
+                          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#f9b17a] px-4 py-3 text-sm font-medium text-[#232844] transition hover:bg-[#f6a56b] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          <Save className="h-4 w-4" />
+                          {actionKey === `course:${course.id}:price` ? '...' : courseManagementCopy.savePrice}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCourseDelete(course.id)}
+                          disabled={actionKey === `course:${course.id}:delete`}
+                          className="inline-flex items-center justify-center gap-2 rounded-md border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-100 transition hover:border-rose-300/50 hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {actionKey === `course:${course.id}:delete` ? '...' : courseManagementCopy.deleteCourse}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )) : <EmptyList message={courseManagementCopy.emptyAllCourses} />}
             </div>
           </div>
 
@@ -595,7 +776,9 @@ function AdminActionButton({ busy, onClick, variant, label }) {
   const baseClassName = 'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-70';
   const variantClassName = variant === 'approve'
     ? 'bg-[#f9b17a] text-[#232844] hover:bg-[#f6a56b]'
-    : 'border border-rose-400/30 bg-rose-500/10 text-rose-100 hover:border-rose-300/50 hover:bg-rose-500/15';
+    : variant === 'delete'
+      ? 'border border-rose-400/30 bg-rose-500/10 text-rose-100 hover:border-rose-300/50 hover:bg-rose-500/15'
+      : 'border border-rose-400/30 bg-rose-500/10 text-rose-100 hover:border-rose-300/50 hover:bg-rose-500/15';
 
   return (
     <button
@@ -604,7 +787,7 @@ function AdminActionButton({ busy, onClick, variant, label }) {
       onClick={onClick}
       className={`${baseClassName} ${variantClassName}`}
     >
-      {variant === 'approve' ? <ShieldCheck className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+      {variant === 'approve' ? <ShieldCheck className="h-4 w-4" /> : variant === 'delete' ? <Trash2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
       {busy ? '...' : label}
     </button>
   );

@@ -17,6 +17,8 @@ export function UploadPage() {
   const [pricing, setPricing] = useState('free');
   const [busy, setBusy] = useState(false);
   const [videoFile, setVideoFile] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState('');
   const [isPreview, setIsPreview] = useState(true);
   const [categoryMode, setCategoryMode] = useState('existing');
   const [customCategoryName, setCustomCategoryName] = useState('');
@@ -164,6 +166,18 @@ export function UploadPage() {
           missing: 'Select a category or enter a new category name.'
         };
 
+  const thumbnailUiCopy = locale === 'mn'
+    ? {
+        label: 'Cover зураг',
+        hint: 'Зургийг drag/drop хийх эсвэл сонгож оруулна уу. PNG, JPG, WebP дэмжинэ.',
+        empty: 'Зураг энд оруулна уу'
+      }
+    : {
+        label: 'Cover image',
+        hint: 'Drag and drop an image or choose one. PNG, JPG, and WebP are supported.',
+        empty: 'Drop an image here'
+      };
+
   useEffect(() => {
     let active = true;
 
@@ -193,6 +207,20 @@ export function UploadPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!thumbnailFile) {
+      setThumbnailPreview('');
+      return undefined;
+    }
+
+    const objectUrl = URL.createObjectURL(thumbnailFile);
+    setThumbnailPreview(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [thumbnailFile]);
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -250,14 +278,14 @@ export function UploadPage() {
       setStatus({ type: 'success', message: copy.success });
       form.reset();
       setVideoFile(null);
+      setThumbnailFile(null);
+      setThumbnailPreview('');
       setPricing('free');
       setIsPreview(true);
       setCustomCategoryName('');
       setCategoryMode(categories.length ? 'existing' : 'custom');
 
-      if (resource?.slug) {
-        navigate(`/resources/${resource.slug}`);
-      }
+      navigate('/profile');
     } catch (error) {
       setStatus({ type: 'error', message: error.message });
     } finally {
@@ -451,12 +479,15 @@ export function UploadPage() {
             />
           </Field>
 
-          <Field label={copy.thumbnailUrl}>
-            <input
-              name="thumbnailUrl"
-              type="url"
-              placeholder={copy.thumbnailPlaceholder}
-              className="input-base"
+          <Field label={thumbnailUiCopy.label}>
+            <DragUploadInput
+              name="thumbnail"
+              accept="image/*"
+              hint={thumbnailUiCopy.hint}
+              emptyLabel={thumbnailUiCopy.empty}
+              file={thumbnailFile}
+              previewUrl={thumbnailPreview}
+              onFileChange={setThumbnailFile}
             />
           </Field>
 
@@ -485,14 +516,14 @@ export function UploadPage() {
           />
 
           <Field label={copy.videoLabel}>
-            <UploadInput
+            <DragUploadInput
               name="video"
               accept="video/*"
               hint={copy.videoHint}
+              emptyLabel={copy.videoLabel}
               file={videoFile}
-              onChange={(event) =>
-                setVideoFile(event.target.files?.[0] || null)
-              }
+              required
+              onFileChange={setVideoFile}
             />
           </Field>
 
@@ -576,22 +607,74 @@ export function UploadPage() {
   );
 }
 
-function UploadInput({ name, accept, hint, file, onChange }) {
+function DragUploadInput({
+  name,
+  accept,
+  hint,
+  emptyLabel,
+  file,
+  previewUrl,
+  required = false,
+  onFileChange
+}) {
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleFiles = (fileList) => {
+    onFileChange(fileList?.[0] || null);
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    setDragActive(false);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setDragActive(false);
+    handleFiles(event.dataTransfer.files);
+  };
+
   return (
-    <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-white/20 bg-white/5 px-4 text-center text-sm text-slate-300">
-      <span>{hint}</span>
+    <label
+      className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed px-4 text-center text-sm transition ${
+        dragActive
+          ? 'border-[#f9b17a] bg-[#f9b17a]/10 text-[#ffd7b6]'
+          : 'border-white/20 bg-white/5 text-slate-300'
+      }`}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt={file?.name || name}
+          className="mb-4 h-32 w-full max-w-[220px] rounded-md object-cover"
+        />
+      ) : null}
+
+      <span className="font-medium text-slate-200">{emptyLabel}</span>
+      <span className="mt-2">{hint}</span>
+
       {file ? (
         <span className="mt-3 text-[#f9b17a]">
           {file.name} ({formatBytes(file.size)})
         </span>
       ) : null}
+
       <input
         name={name}
         type="file"
         accept={accept}
-        onChange={onChange}
+        onChange={(event) => handleFiles(event.target.files)}
         className="hidden"
-        required
+        required={required}
       />
     </label>
   );

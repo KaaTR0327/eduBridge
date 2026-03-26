@@ -165,6 +165,22 @@ router.post('/reviews', asyncHandler(async (req, res) => {
   const courseId = normalizeString(req.body.courseId, { field: 'courseId', required: true });
   const rating = normalizeNumber(req.body.rating, { field: 'rating', required: true, min: 1, max: 5, integer: true });
   const comment = normalizeString(req.body.comment, { field: 'comment', max: 1000 }) || null;
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: {
+      id: true,
+      instructorId: true,
+      status: true
+    }
+  });
+
+  if (!course || course.status !== 'APPROVED') {
+    return res.status(404).json({ error: 'Approved course not found' });
+  }
+
+  if (course.instructorId === req.user.id) {
+    return res.status(403).json({ error: 'You cannot review your own course' });
+  }
 
   const enrollment = await prisma.enrollment.findUnique({
     where: {

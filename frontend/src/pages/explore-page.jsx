@@ -16,7 +16,7 @@ export function ExplorePage() {
   const [categories, setCategories] = useState([]);
   const [searchValue, setSearchValue] = useState(searchParams.get('q') || '');
   const [selectedTags, setSelectedTags] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(() => searchParams.getAll('category').filter(Boolean));
   const [selectedPriceFilters, setSelectedPriceFilters] = useState([]);
   const [selectedFileTypes, setSelectedFileTypes] = useState([]);
   const [sortBy, setSortBy] = useState('newest');
@@ -28,6 +28,7 @@ export function ExplorePage() {
 
   useEffect(() => {
     setSearchValue(searchParams.get('q') || '');
+    setSelectedCategories(searchParams.getAll('category').filter(Boolean));
   }, [searchParams]);
 
   useEffect(() => {
@@ -182,9 +183,24 @@ export function ExplorePage() {
     return sorted;
   }, [deferredSearch, resources, selectedTags, selectedCategories, selectedFileTypes, selectedPriceFilters, sortBy]);
 
+  const syncCategoriesToUrl = (nextCategories) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('category');
+    nextCategories.forEach((category) => nextParams.append('category', category));
+    setSearchParams(nextParams, { replace: true });
+  };
+
   const toggleFromList = (value, current, setter) => {
     startTransition(() => {
-      setter(current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
+      const nextValues = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+
+      setter(nextValues);
+
+      if (setter === setSelectedCategories) {
+        syncCategoriesToUrl(nextValues);
+      }
     });
   };
 
@@ -200,6 +216,7 @@ export function ExplorePage() {
 
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('q');
+    nextParams.delete('category');
     setSearchParams(nextParams, { replace: true });
   };
 
@@ -303,7 +320,12 @@ export function ExplorePage() {
                 {selectedTags.map((tag) => (
                   <ActiveChip key={tag} label={getLanguageLabel(tag, locale) || getLevelLabel(tag, locale) || getCategoryLabel(tag, locale) || tag} onRemove={() => toggleFromList(tag, selectedTags, setSelectedTags)} />
                 ))}
-                {searchValue ? <ActiveChip label={searchValue} onRemove={() => setSearchValue('')} /> : null}
+                {searchValue ? <ActiveChip label={searchValue} onRemove={() => {
+                  setSearchValue('');
+                  const nextParams = new URLSearchParams(searchParams);
+                  nextParams.delete('q');
+                  setSearchParams(nextParams, { replace: true });
+                }} /> : null}
               </div>
             ) : null}
           </div>

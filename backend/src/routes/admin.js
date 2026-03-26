@@ -3,12 +3,25 @@ const { Role, CourseStatus, VerificationStatus } = require('@prisma/client');
 const prisma = require('../lib/prisma');
 const asyncHandler = require('../middleware/asyncHandler');
 const { requireRole } = require('../middleware/auth');
+const { removeStoredUploadByUrl } = require('../middleware/upload');
 const { pickCourseInclude, mapCourse } = require('../utils/courseMapper');
 const { serializeUser } = require('../utils/serialize');
+const { normalizeNumber } = require('../utils/validation');
 
 const router = express.Router();
 
 router.use(requireRole(Role.ADMIN));
+
+function collectCourseUploadUrls(course) {
+  return Array.from(
+    new Set([
+      course.thumbnailUrl,
+      course.introVideoUrl,
+      ...course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.videoUrl)),
+      ...course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.thumbnailUrl))
+    ].filter(Boolean))
+  );
+}
 
 router.get('/dashboard', asyncHandler(async (_req, res) => {
   const [
@@ -98,6 +111,15 @@ router.get('/courses/pending', asyncHandler(async (_req, res) => {
   res.json(courses.map(mapCourse));
 }));
 
+router.get('/courses', asyncHandler(async (_req, res) => {
+  const courses = await prisma.course.findMany({
+    include: pickCourseInclude(),
+    orderBy: { updatedAt: 'desc' }
+  });
+
+  res.json(courses.map(mapCourse));
+}));
+
 router.post('/courses/:courseId/approve', asyncHandler(async (req, res) => {
   const course = await prisma.course.update({
     where: { id: req.params.courseId },
@@ -123,6 +145,91 @@ router.post('/courses/:courseId/reject', asyncHandler(async (req, res) => {
   });
 
   res.json(mapCourse(course));
+}));
+
+router.put('/courses/:courseId', asyncHandler(async (req, res) => {
+  const existing = await prisma.course.findUnique({
+    where: { id: req.params.courseId }
+  });
+
+  if (!existing) {
+    return res.status(404).json({ error: 'Course not found' });
+  }
+
+  const nextPrice = req.body.price !== undefined
+    ? normalizeNumber(req.body.price, { field: 'price', min: 0 })
+    : existing.price;
+
+  const updated = await prisma.course.update({
+    where: { id: existing.id },
+    data: {
+      price: nextPrice
+    },
+    include: pickCourseInclude()
+  });
+
+  res.json(mapCourse(updated));
+}));
+
+router.delete('/courses/:courseId', asyncHandler(async (req, res) => {
+  const course = await prisma.course.findUnique({
+    where: { id: req.params.courseId },
+    include: {
+      sections: {
+        include: {
+          lessons: {
+            select: {
+              id: true,
+              videoUrl: true,
+              thumbnailUrl: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!course) {
+    return res.status(404).json({ error: 'Course not found' });
+  }
+
+  const lessonIds = course.sections.flatMap((section) => section.lessons.map((lesson) => lesson.id));
+  const uploadUrls = collectCourseUploadUrls(course);
+
+  await prisma.$transaction(async (tx) => {
+    if (lessonIds.length > 0) {
+      await tx.lessonProgress.deleteMany({
+        where: {
+          lessonId: {
+            in: lessonIds
+          }
+        }
+      });
+    }
+
+    await tx.review.deleteMany({
+      where: { courseId: course.id }
+    });
+
+    await tx.enrollment.deleteMany({
+      where: { courseId: course.id }
+    });
+
+    await tx.orderItem.deleteMany({
+      where: { courseId: course.id }
+    });
+
+    await tx.course.delete({
+      where: { id: course.id }
+    });
+  });
+
+  await Promise.all(uploadUrls.map((fileUrl) => removeStoredUploadByUrl(fileUrl)));
+
+  res.json({
+    deleted: true,
+    courseId: course.id
+  });
 }));
 
 router.get('/instructors/pending', asyncHandler(async (_req, res) => {
